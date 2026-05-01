@@ -1,5 +1,5 @@
 Dependencies for Project 'Template', Target 'Template': (DO NOT MODIFY !)
-F (.\main.c)(0x69F4001B)(-c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections -I..\CORE -I..\USER -I..\FWLIB\inc -I..\SYSTEM\delay -I..\SYSTEM\sys -I..\SYSTEM\usart -I..\HARDWARE\DHT11 -I..\HARDWARE\LCD -I..\HARDWARE\LED -I..\HARDWARE\STEPMOTOR -I..\HARDWARE\ESP8266 -I..\SYSTEM\usart3 -I..\HARDWARE\MQ2 -I..\HARDWARE\FAN -I..\HARDWARE\GP2Y-I D:\Template\USER\RTE-I D:\KEIL5\Keil\STM32F4xx_DFP\2.13.0-I C:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F407xx -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER --C99-o ..\obj\main.o --omf_browse ..\obj\main.crf --depend ..\obj\main.d)
+F (.\main.c)(0x69F40A19)(-c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections -I..\CORE -I..\USER -I..\FWLIB\inc -I..\SYSTEM\delay -I..\SYSTEM\sys -I..\SYSTEM\usart -I..\HARDWARE\DHT11 -I..\HARDWARE\LCD -I..\HARDWARE\LED -I..\HARDWARE\STEPMOTOR -I..\HARDWARE\ESP8266 -I..\SYSTEM\usart3 -I..\HARDWARE\MQ2 -I..\HARDWARE\FAN -I..\HARDWARE\GP2Y-I D:\Template\USER\RTE-I D:\KEIL5\Keil\STM32F4xx_DFP\2.13.0-I C:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F407xx -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER --C99-o ..\obj\main.o --omf_browse ..\obj\main.crf --depend ..\obj\main.d)
 I (stm32f4xx.h)(0x69D92FD6)
 I (..\CORE\core_cm4.h)(0x53C772C2)
 I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5475F300)
@@ -39,7 +39,10 @@ I (..\SYSTEM\delay\delay.h)(0x5710F354)
 I (..\SYSTEM\sys\sys.h)(0x5710F354)
 I (..\SYSTEM\usart\usart.h)(0x5710F392)
 I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x5475F300)
-I (..\HARDWARE\GP2Y\gp2y.h)(0x69F4001B)
+I (..\SYSTEM\usart3\usart3.h)(0x69DFCE04)
+I (..\HARDWARE\ESP8266\esp8266.h)(0x69F41319)
+I (..\HARDWARE\DHT11\dht11.h)(0x5710F3A0)
+I (..\HARDWARE\MQ2\mq2.h)(0x69DFE4C2)
 F (.\stm32f4xx_it.c)(0x69D92B8E)(-c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections -I..\CORE -I..\USER -I..\FWLIB\inc -I..\SYSTEM\delay -I..\SYSTEM\sys -I..\SYSTEM\usart -I..\HARDWARE\DHT11 -I..\HARDWARE\LCD -I..\HARDWARE\LED -I..\HARDWARE\STEPMOTOR -I..\HARDWARE\ESP8266 -I..\SYSTEM\usart3 -I..\HARDWARE\MQ2 -I..\HARDWARE\FAN -I..\HARDWARE\GP2Y-I D:\Template\USER\RTE-I D:\KEIL5\Keil\STM32F4xx_DFP\2.13.0-I C:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F407xx -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER --C99-o ..\obj\stm32f4xx_it.o --omf_browse ..\obj\stm32f4xx_it.crf --depend ..\obj\stm32f4xx_it.d)
 I (stm32f4xx_it.h)(0x53DB55E8)
 I (stm32f4xx.h)(0x69D92FD6)
@@ -1454,7 +1457,7 @@ I (..\FWLIB\inc\stm32f4xx_dcmi.h)(0x53DB4D3E)
 I (..\FWLIB\inc\stm32f4xx_fsmc.h)(0x53DB4D3E)
 I (..\SYSTEM\usart\usart.h)(0x5710F392)
 I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x5475F300)
-F (..\SYSTEM\usart3\usart3.c)(0x69DFCEAB)(-c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections -I..\CORE -I..\USER -I..\FWLIB\inc -I..\SYSTEM\delay -I..\SYSTEM\sys -I..\SYSTEM\usart -I..\HARDWARE\DHT11 -I..\HARDWARE\LCD -I..\HARDWARE\LED -I..\HARDWARE\STEPMOTOR -I..\HARDWARE\ESP8266 -I..\SYSTEM\usart3 -I..\HARDWARE\MQ2 -I..\HARDWARE\FAN -I..\HARDWARE\GP2Y-I D:\Template\USER\RTE-I D:\KEIL5\Keil\STM32F4xx_DFP\2.13.0-I C:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F407xx -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER --C99-o ..\obj\usart3.o --omf_browse ..\obj\usart3.crf --depend ..\obj\usart3.d)
+F (..\SYSTEM\usart3\usart3.c)(0x69F41351)(-c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections -I..\CORE -I..\USER -I..\FWLIB\inc -I..\SYSTEM\delay -I..\SYSTEM\sys -I..\SYSTEM\usart -I..\HARDWARE\DHT11 -I..\HARDWARE\LCD -I..\HARDWARE\LED -I..\HARDWARE\STEPMOTOR -I..\HARDWARE\ESP8266 -I..\SYSTEM\usart3 -I..\HARDWARE\MQ2 -I..\HARDWARE\FAN -I..\HARDWARE\GP2Y-I D:\Template\USER\RTE-I D:\KEIL5\Keil\STM32F4xx_DFP\2.13.0-I C:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F407xx -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER --C99-o ..\obj\usart3.o --omf_browse ..\obj\usart3.crf --depend ..\obj\usart3.d)
 I (..\SYSTEM\sys\sys.h)(0x5710F354)
 I (..\USER\stm32f4xx.h)(0x69D92FD6)
 I (..\CORE\core_cm4.h)(0x53C772C2)
@@ -1492,7 +1495,7 @@ I (..\FWLIB\inc\stm32f4xx_dcmi.h)(0x53DB4D3E)
 I (..\FWLIB\inc\stm32f4xx_fsmc.h)(0x53DB4D3E)
 I (..\SYSTEM\usart3\usart3.h)(0x69DFCE04)
 I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x5475F300)
-I (..\HARDWARE\ESP8266\esp8266.h)(0x69DFD6CF)
+I (..\HARDWARE\ESP8266\esp8266.h)(0x69F41319)
 F (..\HARDWARE\DHT11\dht11.c)(0x5710F3A0)(-c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections -I..\CORE -I..\USER -I..\FWLIB\inc -I..\SYSTEM\delay -I..\SYSTEM\sys -I..\SYSTEM\usart -I..\HARDWARE\DHT11 -I..\HARDWARE\LCD -I..\HARDWARE\LED -I..\HARDWARE\STEPMOTOR -I..\HARDWARE\ESP8266 -I..\SYSTEM\usart3 -I..\HARDWARE\MQ2 -I..\HARDWARE\FAN -I..\HARDWARE\GP2Y-I D:\Template\USER\RTE-I D:\KEIL5\Keil\STM32F4xx_DFP\2.13.0-I C:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F407xx -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER --C99-o ..\obj\dht11.o --omf_browse ..\obj\dht11.crf --depend ..\obj\dht11.d)
 I (..\HARDWARE\DHT11\dht11.h)(0x5710F3A0)
 I (..\SYSTEM\sys\sys.h)(0x5710F354)
@@ -1648,8 +1651,8 @@ I (..\FWLIB\inc\stm32f4xx_fsmc.h)(0x53DB4D3E)
 I (..\SYSTEM\delay\delay.h)(0x5710F354)
 I (..\SYSTEM\sys\sys.h)(0x5710F354)
 I (..\HARDWARE\STEPMOTOR\stepmotor.h)(0x69DFC627)
-F (..\HARDWARE\ESP8266\esp8266.c)(0x69DFD752)(-c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections -I..\CORE -I..\USER -I..\FWLIB\inc -I..\SYSTEM\delay -I..\SYSTEM\sys -I..\SYSTEM\usart -I..\HARDWARE\DHT11 -I..\HARDWARE\LCD -I..\HARDWARE\LED -I..\HARDWARE\STEPMOTOR -I..\HARDWARE\ESP8266 -I..\SYSTEM\usart3 -I..\HARDWARE\MQ2 -I..\HARDWARE\FAN -I..\HARDWARE\GP2Y-I D:\Template\USER\RTE-I D:\KEIL5\Keil\STM32F4xx_DFP\2.13.0-I C:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F407xx -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER --C99-o ..\obj\esp8266.o --omf_browse ..\obj\esp8266.crf --depend ..\obj\esp8266.d)
-I (..\HARDWARE\ESP8266\esp8266.h)(0x69DFD6CF)
+F (..\HARDWARE\ESP8266\esp8266.c)(0x69F418B0)(-c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections -I..\CORE -I..\USER -I..\FWLIB\inc -I..\SYSTEM\delay -I..\SYSTEM\sys -I..\SYSTEM\usart -I..\HARDWARE\DHT11 -I..\HARDWARE\LCD -I..\HARDWARE\LED -I..\HARDWARE\STEPMOTOR -I..\HARDWARE\ESP8266 -I..\SYSTEM\usart3 -I..\HARDWARE\MQ2 -I..\HARDWARE\FAN -I..\HARDWARE\GP2Y-I D:\Template\USER\RTE-I D:\KEIL5\Keil\STM32F4xx_DFP\2.13.0-I C:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F407xx -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER --C99-o ..\obj\esp8266.o --omf_browse ..\obj\esp8266.crf --depend ..\obj\esp8266.d)
+I (..\HARDWARE\ESP8266\esp8266.h)(0x69F41319)
 I (..\SYSTEM\sys\sys.h)(0x5710F354)
 I (..\USER\stm32f4xx.h)(0x69D92FD6)
 I (..\CORE\core_cm4.h)(0x53C772C2)

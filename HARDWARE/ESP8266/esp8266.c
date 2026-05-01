@@ -7,7 +7,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 // 全局变量
 //////////////////////////////////////////////////////////////////////////////////
-u8 esp_rx_buffer[300];          // ESP8266接收缓冲区
+u8 esp_rx_buffer[ESP8266_RX_BUFFER_SIZE];   // ESP8266接收缓冲区
 u8 esp_rx_flag = 0;             // 接收完成标志
 u16 esp_rx_len = 0;             // 接收数据长度
 
@@ -34,7 +34,7 @@ void esp_delay_ms(u16 nms)
 void esp_clear_buffer(void)
 {
     u16 i;
-    for(i = 0; i < 300; i++)
+    for(i = 0; i < ESP8266_RX_BUFFER_SIZE; i++)
         esp_rx_buffer[i] = 0;
     esp_rx_len = 0;
     esp_rx_flag = 0;
@@ -55,33 +55,79 @@ void USART3_SendString(char *str)
 //////////////////////////////////////////////////////////////////////////////////
 // 发送AT指令
 //////////////////////////////////////////////////////////////////////////////////
-void esp8266_cmd_send(char *cmd, char *ack, u16 timeout)
+static u8 esp8266_wait_ack(const char *ack1, const char *ack2, u16 timeout)
 {
-    u8 retry = 0;
-    
+    u16 elapsed = 0;
+
+    while(elapsed < timeout)
+    {
+        esp_delay_ms(20);
+        elapsed += 20;
+
+        if((ack1 && strstr((char*)esp_rx_buffer, ack1) != NULL) ||
+           (ack2 && strstr((char*)esp_rx_buffer, ack2) != NULL))
+        {
+            return 1;
+        }
+
+        if(strstr((char*)esp_rx_buffer, "\r\nERROR\r\n") != NULL ||
+           strstr((char*)esp_rx_buffer, "\r\nFAIL\r\n") != NULL)
+            return 0;
+    }
+
+    printf("ESP8266 FULL BUFFER: %s\r\n", esp_rx_buffer);
+
+    return 0;
+}
+
+static u8 esp8266_wait_ack3(const char *ack1, const char *ack2, const char *ack3, u16 timeout)
+{
+    u16 elapsed = 0;
+
+    while(elapsed < timeout)
+    {
+        esp_delay_ms(20);
+        elapsed += 20;
+
+        if((ack1 && strstr((char*)esp_rx_buffer, ack1) != NULL) ||
+           (ack2 && strstr((char*)esp_rx_buffer, ack2) != NULL) ||
+           (ack3 && strstr((char*)esp_rx_buffer, ack3) != NULL))
+        {
+            return 1;
+        }
+
+        if(strstr((char*)esp_rx_buffer, "\r\nERROR\r\n") != NULL ||
+           strstr((char*)esp_rx_buffer, "\r\nFAIL\r\n") != NULL)
+            return 0;
+    }
+
+    printf("ESP8266 FULL BUFFER: %s\r\n", esp_rx_buffer);
+
+    return 0;
+}
+
+static u8 esp8266_cmd_send_multi(char *cmd, const char *ack1, const char *ack2, u16 timeout)
+{
+    u8 ok;
+
     esp_clear_buffer();
-    
-    // 发送指令
+
     printf("Send CMD: %s\r\n", cmd);
     USART3_SendString(cmd);
     USART3_SendString("\r\n");
-    
-    // 等待响应
-    while(timeout--)
-    {
-        esp_delay_ms(1);
-        if(esp_rx_flag == 1)    // 收到数据
-        {
-            esp_rx_flag = 0;
-            if(strstr((char*)esp_rx_buffer, ack) != NULL)  // 找到期望的应答
-            {
-                printf("ESP8266 CMD OK: %s\r\n", cmd);
-                return;
-            }
-        }
-    }
-    
-    printf("ESP8266 CMD ERROR: %s\r\n", cmd);
+
+    ok = esp8266_wait_ack(ack1, ack2, timeout);
+    if(ok)
+        printf("ESP8266 CMD OK: %s\r\n", cmd);
+    else
+        printf("ESP8266 CMD ERROR: %s\r\n", cmd);
+
+    return ok;
+}
+
+u8 esp8266_cmd_send(char *cmd, char *ack, u16 timeout)
+{
+    return esp8266_cmd_send_multi(cmd, ack, NULL, timeout);
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -99,28 +145,23 @@ u8 esp8266_check_cmd(char *ack)
 //////////////////////////////////////////////////////////////////////////////////
 void esp8266_init(void)
 {
-    printf("\r\n========== ESP8266初始化开始 ==========\r\n");
+    printf("\r\n========== ESP8266 init start ==========\r\n");
     
-    // 1. 测试AT指令
-    esp8266_cmd_send("AT", "OK", 2000);
+    esp8266_cmd_send("AT", "OK", 3000);
     esp_delay_ms(500);
     
-    // 2. 关闭回显
-    esp8266_cmd_send("ATE0", "OK", 2000);
+    esp8266_cmd_send("ATE0", "OK", 3000);
     esp_delay_ms(500);
     
-    // 3. 设置为Station模式
-    esp8266_cmd_send("AT+CWMODE=1", "OK", 2000);
+    esp8266_cmd_send("AT+CWMODE=1", "OK", 3000);
     esp_delay_ms(500);
     
-    // 4. 重启模块
     esp8266_cmd_send("AT+RST", "ready", 5000);
-    esp_delay_ms(2000);
+    esp_delay_ms(3000);
     
-    // 5. 查询模块版本
-    esp8266_cmd_send("AT+GMR", "OK", 2000);
+    esp8266_cmd_send("AT+GMR", "OK", 3000);
     
-    printf("========== ESP8266初始化完成 ==========\r\n");
+    printf("========== ESP8266 init done ==========\r\n");
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -128,21 +169,19 @@ void esp8266_init(void)
 //////////////////////////////////////////////////////////////////////////////////
 void esp8266_connect_wifi(void)
 {
-    char cmd[100];
+    char cmd[256];
     
-    printf("\r\n========== 连接WiFi ==========\r\n");
+    printf("\r\n========== WiFi connect start ==========\r\n");
     printf("SSID: %s\r\n", WIFI_SSID);
     printf("PWD:  %s\r\n", WIFI_PASSWORD);
     
-    // 发送连接WiFi指令
     sprintf(cmd, "AT+CWJAP=\"%s\",\"%s\"", WIFI_SSID, WIFI_PASSWORD);
-    esp8266_cmd_send(cmd, "OK", 15000);
+    if(esp8266_cmd_send_multi(cmd, "WIFI GOT IP", "OK", 20000))
+        wifi_connected = 1;
     
-    // 查询IP地址
     esp8266_cmd_send("AT+CIFSR", "OK", 2000);
     
-    wifi_connected = 1;
-    printf("WiFi连接成功!\r\n");
+    printf("WiFi connect done\r\n");
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -150,52 +189,73 @@ void esp8266_connect_wifi(void)
 //////////////////////////////////////////////////////////////////////////////////
 void esp8266_connect_onenet(void)
 {
-    char cmd[300];
+    char cmd[512];
+    u8 mqtt_connected = 0;
     
-    printf("\r\n========== 连接OneNet云平台 ==========\r\n");
+    printf("\r\n========== Connect OneNET start ==========\r\n");
     printf("Server: %s:%s\r\n", ONENET_SERVER, ONENET_PORT);
     printf("Device Name: %s\r\n", DEVICE_NAME);
     
-    // 1. 配置MQTT版本和连接方式
     sprintf(cmd, "AT+MQTTUSERCFG=0,1,\"%s\",\"%s\",\"%s\",0,0,\"\"", 
             DEVICE_NAME, PRODUCT_ID, DEVICE_TOKEN);
-    esp8266_cmd_send(cmd, "OK", 3000);
+    esp8266_cmd_send(cmd, "OK", 5000);
     
     esp_delay_ms(500);
     
-    // 2. 设置MQTT服务器地址和端口
     sprintf(cmd, "AT+MQTTCONN=0,\"%s\",%s,1", ONENET_SERVER, ONENET_PORT);
-    esp8266_cmd_send(cmd, "CONNECT", 10000);
+    mqtt_connected = esp8266_cmd_send_multi(cmd, "+MQTTCONNECTED", "OK", 10000);
+    if(mqtt_connected)
+        onenet_connected = 1;
     
-    onenet_connected = 1;
-    printf("OneNet连接成功!\r\n");
+    printf("Connect OneNET done\r\n");
+    esp8266_subscribe_property_reply();
+}
+
+void esp8266_subscribe_property_reply(void)
+{
+    char cmd[256];
+
+    sprintf(cmd, "AT+MQTTSUB=0,\"%s\",0", ONENET_PROPERTY_POST_REPLY_TOPIC);
+    if(esp8266_cmd_send(cmd, "OK", 10000))
+        printf("Subscribe reply topic OK: %s\r\n", ONENET_PROPERTY_POST_REPLY_TOPIC);
+    else
+        printf("Subscribe reply topic ERROR: %s\r\n", ONENET_PROPERTY_POST_REPLY_TOPIC);
+
+    delay_ms(1000);
 }
 
 void esp8266_mqtt_publish(const char *topic, const char *payload)
 {
-    char cmd[160];
+    char cmd[256];
 
-    sprintf(cmd, "AT+MQTTPUBRAW=\"%s\",%d", topic, strlen(payload));
-    esp8266_cmd_send(cmd, ">", 2000);
-    esp8266_cmd_send((char *)payload, "OK", 5000);
+    sprintf(cmd, "AT+MQTTPUBRAW=0,\"%s\",%d,0,0", topic, strlen(payload));
+
+    esp8266_cmd_send(cmd, ">", 3000);
+    esp_clear_buffer();
+    USART3_SendString((char *)payload);
+
+    if(esp8266_wait_ack3("OK", "+MQTTPUB:OK", "+MQTTSUBRECV", 10000))
+        printf("ESP8266 CMD OK: payload\r\n");
+    else
+        printf("ESP8266 CMD ERROR: payload\r\n");
 }
 
 void esp8266_onenet_post_property(float temp, float hum, float smoke)
 {
     char payload[256];
+    int smoke_value = (int)(smoke + 0.5f);
 
     sprintf(payload,
-        "{\"id\":\"123\",\"version\":\"1.0\",\"params\":{"
-        "\"%s\":{\"value\":%.2f},"
-        "\"%s\":{\"value\":%.2f},"
-        "\"%s\":{\"value\":%.2f}"
+        "{\"id\":\"1\",\"version\":\"1.0\",\"params\":{"
+        "\"Temp\":{\"value\":%.2f},"
+        "\"Hum\":{\"value\":%.2f},"
+        "\"Smoke\":{\"value\":%d}"
         "}}",
-        PROPERTY_TEMP, temp,
-        PROPERTY_HUM, hum,
-        PROPERTY_SMOKE, smoke
-    );
+        temp, hum, smoke_value);
 
     esp8266_mqtt_publish(ONENET_PROPERTY_POST_TOPIC, payload);
+    delay_ms(5000);
+    printf("ESP8266 AFTER PUBLISH BUFFER: %s\r\n", esp_rx_buffer);
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -250,18 +310,17 @@ void esp8266_send_multi_data(float pm)
 //////////////////////////////////////////////////////////////////////////////////
 void esp8266_data_handle(u8 res)
 {
-    if(esp_rx_len < 300)
+    if(esp_rx_len < sizeof(esp_rx_buffer) - 1)
     {
         esp_rx_buffer[esp_rx_len++] = res;
-        
-        // 检测到换行或超时后认为一帧数据结束
+        esp_rx_buffer[esp_rx_len] = '\0';
+
         if(res == '\n')
-        {
             esp_rx_flag = 1;
-        }
     }
     else
     {
-        esp_clear_buffer();
+        esp_rx_buffer[esp_rx_len] = '\0';
+        esp_rx_flag = 1;
     }
 }

@@ -38,4 +38,7 @@
 ..\obj\main.o: ..\SYSTEM\sys\sys.h
 ..\obj\main.o: ..\SYSTEM\usart\usart.h
 ..\obj\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
-..\obj\main.o: ..\HARDWARE\GP2Y\gp2y.h
+..\obj\main.o: ..\SYSTEM\usart3\usart3.h
+..\obj\main.o: ..\HARDWARE\ESP8266\esp8266.h
+..\obj\main.o: ..\HARDWARE\DHT11\dht11.h
+..\obj\main.o: ..\HARDWARE\MQ2\mq2.h

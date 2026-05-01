@@ -26,20 +26,18 @@ Project File Date:  04/24/2026
 
 <h2>Output:</h2>
 Build target 'Template'
-compiling main.c...
-..\HARDWARE\GP2Y\gp2y.h(48): warning:  #1-D: last line of file ends without a newline
+compiling esp8266.c...
+..\SYSTEM\usart3\usart3.h(20): warning:  #1-D: last line of file ends without a newline
   #endif
-main.c(45): warning:  #1-D: last line of file ends without a newline
-  }
-main.c: 2 warnings, 0 errors
-compiling gp2y.c...
-..\HARDWARE\GP2Y\gp2y.h(48): warning:  #1-D: last line of file ends without a newline
-  #endif
-..\HARDWARE\GP2Y\gp2y.c(191): warning:  #1-D: last line of file ends without a newline
-  }
-..\HARDWARE\GP2Y\gp2y.c: 2 warnings, 0 errors
+..\HARDWARE\ESP8266\esp8266.c(224): warning:  #223-D: function "delay_ms" declared implicitly
+      delay_ms(1000);
+..\HARDWARE\ESP8266\esp8266.c(257): warning:  #223-D: function "delay_ms" declared implicitly
+      delay_ms(5000);
+..\HARDWARE\ESP8266\esp8266.c(278): warning:  #870-D: invalid multibyte character sequence
+      printf("数据发送成�? %s\r\n", data);
+..\HARDWARE\ESP8266\esp8266.c: 4 warnings, 0 errors
 linking...
-Program Size: Code=8492 RO-data=600 RW-data=36 ZI-data=2332  
+Program Size: Code=13528 RO-data=1148 RW-data=40 ZI-data=3904  
 FromELF: creating hex file...
 "..\OBJ\Template.axf" - 0 Error(s), 4 Warning(s).
 

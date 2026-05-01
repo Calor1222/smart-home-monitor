@@ -1,9 +1,9 @@
 #include "sys.h"
 #include "usart3.h"
-#include "esp8266.h"  // Ìí¼ÓESP8266Í·ÎÄ¼þ
+#include "esp8266.h"  // æ·»åŠ ESP8266å¤´æ–‡ä»¶
 
 //////////////////////////////////////////////////////////////////////////////////
-// Èç¹ûÊ¹ÓÃucos,Ôò°üÀ¨ÏÂÃæµÄÍ·ÎÄ¼þ¼´¿É.
+// å¦‚æžœä½¿ç”¨ucos,åˆ™åŒ…æ‹¬ä¸‹é¢çš„å¤´æ–‡ä»¶å³å¯.
 #if SYSTEM_SUPPORT_OS
 #include "includes.h"
 #endif
@@ -15,8 +15,8 @@ u16 USART3_RX_STA = 0;
 #endif
 
 /**
- * ´®¿Ú3³õÊ¼»¯º¯Êý
- * bound: ²¨ÌØÂÊ
+ * ä¸²å£3åˆå§‹åŒ–å‡½æ•°
+ * bound: æ³¢ç‰¹çŽ‡
  */
 void uart3_init(u32 bound)
 {
@@ -24,23 +24,23 @@ void uart3_init(u32 bound)
     USART_InitTypeDef USART_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
 
-    // Ê¹ÄÜGPIOBºÍUSART3Ê±ÖÓ
+    // ä½¿èƒ½GPIOBå’ŒUSART3æ—¶é’Ÿ
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
 
-    // ´®¿Ú3¶ÔÓ¦Òý½Å¸´ÓÃÓ³Éä: PB10->USART3_TX, PB11->USART3_RX
+    // ä¸²å£3å¯¹åº”å¼•è„šå¤ç”¨æ˜ å°„: PB10->USART3_TX, PB11->USART3_RX
     GPIO_PinAFConfig(GPIOB, GPIO_PinSource10, GPIO_AF_USART3);
     GPIO_PinAFConfig(GPIOB, GPIO_PinSource11, GPIO_AF_USART3);
 
-    // USART3¶Ë¿ÚÅäÖÃ
+    // USART3ç«¯å£é…ç½®
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10 | GPIO_Pin_11;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;    // ¸´ÓÃ¹¦ÄÜ
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;    // å¤ç”¨åŠŸèƒ½
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;  // ÍÆÍì¸´ÓÃÊä³ö
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;    // ÉÏÀ­
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;  // æŽ¨æŒ½å¤ç”¨è¾“å‡º
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;    // ä¸Šæ‹‰
     GPIO_Init(GPIOB, &GPIO_InitStructure);
 
-    // USART3 ³õÊ¼»¯ÉèÖÃ
+    // USART3 åˆå§‹åŒ–è®¾ç½®
     USART_InitStructure.USART_BaudRate = bound;
     USART_InitStructure.USART_WordLength = USART_WordLength_8b;
     USART_InitStructure.USART_StopBits = USART_StopBits_1;
@@ -49,12 +49,12 @@ void uart3_init(u32 bound)
     USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
     USART_Init(USART3, &USART_InitStructure);
 
-    USART_Cmd(USART3, ENABLE);  // Ê¹ÄÜ´®¿Ú3
+    USART_Cmd(USART3, ENABLE);  // ä½¿èƒ½ä¸²å£3
 
 #if EN_USART3_RX
-    USART_ITConfig(USART3, USART_IT_RXNE, ENABLE); // ¿ªÆô½ÓÊÕÖÐ¶Ï
+    USART_ITConfig(USART3, USART_IT_RXNE, ENABLE); // å¼€å¯æŽ¥æ”¶ä¸­æ–­
 
-    // USART3 NVIC ÅäÖÃ
+    // USART3 NVIC é…ç½®
     NVIC_InitStructure.NVIC_IRQChannel = USART3_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;
@@ -65,7 +65,7 @@ void uart3_init(u32 bound)
 
 #if EN_USART3_RX
 /**
- * ´®¿Ú3ÖÐ¶Ï·þÎñ³ÌÐò
+ * ä¸²å£3ä¸­æ–­æœåŠ¡ç¨‹åº
  */
 void USART3_IRQHandler(void)
 {
@@ -78,34 +78,7 @@ void USART3_IRQHandler(void)
     if (USART_GetITStatus(USART3, USART_IT_RXNE) != RESET)
     {
         Res = USART_ReceiveData(USART3);
-        
-        // Ô­ÓÐµÄ´®¿Ú3Êý¾Ý½ÓÊÕ´¦Àí
-        if ((USART3_RX_STA & 0x8000) == 0)
-        {
-            if (USART3_RX_STA & 0x4000)
-            {
-                if (Res != 0x0a)
-                    USART3_RX_STA = 0;
-                else
-                    USART3_RX_STA |= 0x8000;
-            }
-            else
-            {
-                if (Res == 0x0d)
-                {
-                    USART3_RX_STA |= 0x4000;
-                }
-                else
-                {
-                    USART3_RX_BUF[USART3_RX_STA & 0x3FFF] = Res;
-                    USART3_RX_STA++;
-                    if (USART3_RX_STA > (USART3_REC_LEN - 1))
-                        USART3_RX_STA = 0;
-                }
-            }
-        }
-        
-        // Ìí¼ÓESP8266Êý¾Ý´¦Àí
+
         esp8266_data_handle(Res);
     }
 
