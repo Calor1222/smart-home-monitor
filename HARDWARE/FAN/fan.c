@@ -1,75 +1,79 @@
 #include "fan.h"
 
+/*
+ * åˆå§‹åŒ–é£Žæ‰‡æŽ§åˆ¶
+ * ä½¿ç”¨TIM4è¾“å‡ºPWM
+ */
 void Fan_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
     TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
     TIM_OCInitTypeDef TIM_OCInitStructure;
-    
-    // 1. Ê¹ÄÜÏà¹ØÊ±ÖÓ
+
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
-    
-    // 2. ÅäÖÃPB6Îª¸´ÓÃ¹¦ÄÜ
+
     GPIO_PinAFConfig(GPIOB, GPIO_PinSource6, GPIO_AF_TIM4);
-    
+
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
     GPIO_Init(GPIOB, &GPIO_InitStructure);
-    
-    // 3. ÅäÖÃ¶¨Ê±Æ÷TIM4£¨ÆµÂÊ50Hz£¬ÖÜÆÚ20ms£©
+
     TIM_TimeBaseStructure.TIM_Period = 20000 - 1;
     TIM_TimeBaseStructure.TIM_Prescaler = 84 - 1;
     TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
     TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
     TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure);
-    
-    // 4. ÅäÖÃPWMÊä³öÍ¨µÀ
+
     TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
     TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
     TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
     TIM_OCInitStructure.TIM_Pulse = 0;
     TIM_OC1Init(TIM4, &TIM_OCInitStructure);
-    
-    // 5. Ê¹ÄÜÔ¤×°ÔØ¼Ä´æÆ÷
+
     TIM_OC1PreloadConfig(TIM4, TIM_OCPreload_Enable);
     TIM_ARRPreloadConfig(TIM4, ENABLE);
-    
-    // 6. Ê¹ÄÜTIM4
+
     TIM_Cmd(TIM4, ENABLE);
-    
-    // 7. ³õÊ¼×´Ì¬£º·çÉÈÍ£Ö¹£¨Êä³ö¸ßµçÆ½£©
+
     TIM_SetCompare1(TIM4, 20000);
 }
 
-// ÉèÖÃ·çÉÈ×ªËÙ£¨0Í£Ö¹£¬100È«ËÙ£©
+/*
+ * è®¾ç½®é£Žæ‰‡è½¬é€Ÿ
+ * è¾“å…¥èŒƒå›´0åˆ°100
+ */
 void Fan_SetSpeed(u8 percent)
 {
     u32 compare_value;
-    
+
     if(percent > 100) percent = 100;
-    
-    // µÍµçÆ½´¥·¢£º×ªËÙÓëÕ¼¿Õ±È³É·´±È
-    // Õ¼¿Õ±È = (100 - ×ªËÙ°Ù·Ö±È) %
+
     compare_value = (100 - percent) * 20000 / 100;
-    
+
     if(compare_value > 20000) compare_value = 20000;
     if(compare_value < 0) compare_value = 0;
-    
+
     TIM_SetCompare1(TIM4, compare_value);
 }
 
-// ·çÉÈÆô¶¯£¨50%×ªËÙ£©
+/*
+ * å¼€å¯é£Žæ‰‡
+ * é»˜è®¤ä½¿ç”¨50%è½¬é€Ÿ
+ */
 void Fan_On(void)
 {
     Fan_SetSpeed(50);
 }
 
-// ·çÉÈÍ£Ö¹
+/*
+ * å…³é—­é£Žæ‰‡
+ * è¾“å‡ºé«˜ç”µå¹³åœæ­¢
+ */
 void Fan_Off(void)
 {
-    TIM_SetCompare1(TIM4, 20000);  // 100%Õ¼¿Õ±È = ³ÖÐø¸ßµçÆ½
+    TIM_SetCompare1(TIM4, 20000);
 }

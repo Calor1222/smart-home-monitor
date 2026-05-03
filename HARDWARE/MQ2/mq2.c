@@ -1,46 +1,37 @@
-/**
-  ******************************************************************************
-  * @file    mq2.c
-  * @author  MQ-2 Driver
-  * @version V1.0
-  * @date    2026-04-16
-  * @brief   MQ-2 ÑÌÎí´«¸ÐÆ÷Çý¶¯Ô´ÎÄ¼þ
-  ******************************************************************************
-  */
-
 #include "mq2.h"
 #include "stm32f4xx_adc.h"
 #include <math.h>
 
-/* ´æ´¢Ð£×¼ºóµÄ Ro Öµ£¨´«¸ÐÆ÷ÔÚ½à¾»¿ÕÆøÖÐµÄÄÚ×è£©*/
+/*
+ * æ ¡å‡†åŽçš„Roå€¼
+ * ç”¨äºŽæ°”ä½“æµ“åº¦æ¢ç®—
+ */
 static float Ro = 1.0f;
 
-/* MQ-2 ´«¸ÐÆ÷ÌØÐÔÇúÏß²ÎÊý (Å¨¶ÈÓë Rs/Ro ±ÈÖµµÄ¹ØÏµ) */
-/* ¹«Ê½: ppm = a * (Rs/Ro)^b */
-#define MQ2_CURVE_A             1000.0f
-#define MQ2_CURVE_B             -1.5f
+/*
+ * æ›²çº¿å‚æ•°
+ * ç”¨äºŽPPMè®¡ç®—
+ */
+#define MQ2_CURVE_A 1000.0f
+#define MQ2_CURVE_B -1.5f
 
-/**
-  * @brief  ADC1 ³õÊ¼»¯
-  * @param  ÎÞ
-  * @retval ÎÞ
-  */
+/*
+ * åˆå§‹åŒ–ADCè¾“å…¥
+ * AOè„šä½¿ç”¨PC1
+ */
 static void MQ2_ADC_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct;
     ADC_InitTypeDef ADC_InitStruct;
-    
-    /* 1. Ê¹ÄÜÊ±ÖÓ */
+
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
-    
-    /* 2. ÅäÖÃ PC1 ÎªÄ£ÄâÊäÈëÄ£Ê½ */
+
     GPIO_InitStruct.GPIO_Pin = MQ2_AO_PIN;
     GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AN;
     GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
     GPIO_Init(MQ2_AO_GPIO_PORT, &GPIO_InitStruct);
-    
-    /* 3. ADC ÅäÖÃ */
+
     ADC_InitStruct.ADC_Resolution = ADC_Resolution_12b;
     ADC_InitStruct.ADC_ScanConvMode = DISABLE;
     ADC_InitStruct.ADC_ContinuousConvMode = DISABLE;
@@ -49,49 +40,42 @@ static void MQ2_ADC_Init(void)
     ADC_InitStruct.ADC_DataAlign = ADC_DataAlign_Right;
     ADC_InitStruct.ADC_NbrOfConversion = 1;
     ADC_Init(ADC1, &ADC_InitStruct);
-    
-    /* 4. Ê¹ÄÜ ADC1 */
+
     ADC_Cmd(ADC1, ENABLE);
 }
 
-/**
-  * @brief  MQ-2 ³õÊ¼»¯º¯Êý (°üº¬ GPIO ºÍ ADC)
-  * @param  ÎÞ
-  * @retval ÎÞ
-  */
+/*
+ * åˆå§‹åŒ–MQ2
+ * åŒ…æ‹¬DOå’ŒAOå¼•è„š
+ */
 void MQ2_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
-    
-    /* 1. Ê¹ÄÜ GPIO Ê±ÖÓ */
+
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA | RCC_AHB1Periph_GPIOC, ENABLE);
-    
-    /* 2. ³õÊ¼»¯ DO Òý½Å (PA0 - ÊäÈëÄ£Ê½) */
+
     GPIO_InitStruct.GPIO_Pin = MQ2_DO_PIN;
     GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
-    GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_DOWN;  /* ÏÂÀ­£¬·ÀÖ¹Ðü¿ÕÎó´¥·¢ */
+    GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_DOWN;
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(MQ2_DO_GPIO_PORT, &GPIO_InitStruct);
-    
-    /* 3. ³õÊ¼»¯ ADC (ÓÃÓÚ AO Òý½Å) */
+
     MQ2_ADC_Init();
 }
 
-/**
-  * @brief  »ñÈ¡ DO Òý½ÅµçÆ½ (Ó²¼þÊý×ÖÊä³ö)
-  * @param  ÎÞ
-  * @retval 0: Å¨¶ÈµÍÓÚãÐÖµ, 1: Å¨¶È³¬¹ýãÐÖµ
-  */
+/*
+ * è¯»å–DOç”µå¹³
+ * ç”¨äºŽç¡¬ä»¶æŠ¥è­¦åˆ¤æ–­
+ */
 u8 MQ2_GetDigitalOutput(void)
 {
     return GPIO_ReadInputDataBit(MQ2_DO_GPIO_PORT, MQ2_DO_PIN);
 }
 
-/**
-  * @brief  ¶ÁÈ¡ ADC Öµ£¨´øÖÐÖµÂË²¨£©
-  * @param  num_samples: ²ÉÑù´ÎÊý (½¨Òé 5-15)
-  * @retval ADC Ô­Ê¼Öµ (0-4095)
-  */
+/*
+ * è¯»å–ADCå¹¶æ»¤æ³¢
+ * åŽ»æŽ‰æœ€å¤§æœ€å°å€¼åŽå–å¹³å‡
+ */
 static u32 MQ2_ReadADC_Filtered(u8 num_samples)
 {
     u32 values[15];
@@ -99,29 +83,19 @@ static u32 MQ2_ReadADC_Filtered(u8 num_samples)
     u8 i, j;
     u32 sum = 0;
     u8 count = 0;
-    
+
     if(num_samples > 15) num_samples = 15;
     if(num_samples < 3) num_samples = 3;
-    
-    /* ²ÉÑù */
+
     for(i = 0; i < num_samples; i++)
     {
-        /* ÅäÖÃÍ¨µÀ£¬Ê¹ÓÃ×î³¤²ÉÑùÊ±¼äÌá¸ßÎÈ¶¨ÐÔ */
         ADC_RegularChannelConfig(ADC1, MQ2_AO_ADC_CHANNEL, 1, ADC_SampleTime_480Cycles);
-        
-        /* Æô¶¯×ª»» */
         ADC_SoftwareStartConv(ADC1);
-        
-        /* µÈ´ý×ª»»Íê³É */
         while(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET);
-        
-        /* ¶ÁÈ¡Öµ */
         values[i] = ADC_GetConversionValue(ADC1);
-        
         delay_ms(5);
     }
-    
-    /* Ã°ÅÝÅÅÐò */
+
     for(i = 0; i < num_samples - 1; i++)
     {
         for(j = i + 1; j < num_samples; j++)
@@ -134,23 +108,21 @@ static u32 MQ2_ReadADC_Filtered(u8 num_samples)
             }
         }
     }
-    
-    /* È¥µô×î´ó×îÐ¡Öµ£¬È¡Æ½¾ù */
+
     for(i = 1; i < num_samples - 1; i++)
     {
         sum += values[i];
         count++;
     }
-    
+
     if(count == 0) return values[0];
     return sum / count;
 }
 
-/**
-  * @brief  »ñÈ¡ AO Òý½ÅµçÑ¹Öµ£¨´ø»¬¶¯Æ½¾ùÂË²¨£©
-  * @param  ÎÞ
-  * @retval µçÑ¹Öµ (µ¥Î»: V)
-  */
+/*
+ * è¯»å–AOç”µåŽ‹
+ * å¸¦æ»‘åŠ¨å¹³å‡æ»¤æ³¢
+ */
 float MQ2_GetVoltage(void)
 {
     u32 adc_value;
@@ -159,20 +131,17 @@ float MQ2_GetVoltage(void)
     static u8 filled = 0;
     float sum = 0;
     u8 i;
-    
-    /* ¶ÁÈ¡ÂË²¨ºóµÄ ADC Öµ£¬²ÉÑù10´Î */
+    float voltage;
+
     adc_value = MQ2_ReadADC_Filtered(10);
-    
-    /* ×ª»»ÎªµçÑ¹Öµ */
-    float voltage = (float)adc_value / ADC_MAX_VALUE * ADC_REF_VOLTAGE;
-    
-    /* »¬¶¯Æ½¾ùÂË²¨ */
+    voltage = (float)adc_value / ADC_MAX_VALUE * ADC_REF_VOLTAGE;
+
     voltage_history[index] = voltage;
     index++;
     if(index >= 5) index = 0;
-    
+
     if(index == 0) filled = 1;
-    
+
     if(filled)
     {
         for(i = 0; i < 5; i++) sum += voltage_history[i];
@@ -185,88 +154,73 @@ float MQ2_GetVoltage(void)
     }
 }
 
-/**
-  * @brief  »ñÈ¡´«¸ÐÆ÷ÄÚ×èÓë½à¾»¿ÕÆøÄÚ×èµÄ±ÈÖµ (Rs/Ro)
-  * @param  ÎÞ
-  * @retval Rs/Ro ±ÈÖµ
-  * @note   ÐèÒªÏÈµ÷ÓÃ MQ2_Calibrate() »ñÈ¡ Ro Öµ
-  */
+/*
+ * è¯»å–Rs/Roæ¯”å€¼
+ * éœ€è¦å…ˆå®Œæˆæ ¡å‡†
+ */
 float MQ2_GetRatio(void)
 {
     float voltage = MQ2_GetVoltage();
     float Rs;
-    
-    /* ±ÜÃâ³ýÁã */
+
     if(voltage < 0.01f) voltage = 0.01f;
-    
-    /* ¼ÆËã Rs = RL * (Vcc/Vout - 1) */
+
     Rs = MQ2_RL * (MQ2_VCC / voltage - 1.0f);
-    
     return Rs / Ro;
 }
 
-/**
-  * @brief  ´«¸ÐÆ÷Ð£×¼ - ÔÚ½à¾»¿ÕÆøÖÐ»ñÈ¡ Ro Öµ
-  * @param  ÎÞ
-  * @retval ÎÞ
-  * @note   Ê¹ÓÃÇ°È·±£´«¸ÐÆ÷ÒÑÔ¤ÈÈ 15 ÃëÒÔÉÏ
-  */
+/*
+ * æ ¡å‡†MQ2
+ * åœ¨æ´å‡€ç©ºæ°”ä¸­èŽ·å–Ro
+ */
 void MQ2_Calibrate(void)
 {
     float voltage_sum = 0.0f;
     u8 i;
-    
-    /* È¡ 30 ´Î²ÉÑùÆ½¾ùÖµ */
+    float voltage_avg;
+    float Rs_clean;
+
     for(i = 0; i < 30; i++)
     {
         voltage_sum += MQ2_GetVoltage();
         delay_ms(50);
     }
-    
-    float voltage_avg = voltage_sum / 30.0f;
-    
-    /* ±ÜÃâ³ýÁã */
+
+    voltage_avg = voltage_sum / 30.0f;
+
     if(voltage_avg < 0.01f) voltage_avg = 0.01f;
-    
-    /* ¼ÆËã½à¾»¿ÕÆøÖÐµÄ Rs */
-    float Rs_clean = MQ2_RL * (MQ2_VCC / voltage_avg - 1.0f);
-    
-    /* ½à¾»¿ÕÆøÖÐ Rs/Ro = MQ2_CLEAN_AIR_RATIO */
+
+    Rs_clean = MQ2_RL * (MQ2_VCC / voltage_avg - 1.0f);
     Ro = Rs_clean / MQ2_CLEAN_AIR_RATIO;
 }
 
-/**
-  * @brief  »ñÈ¡µ±Ç°ÆøÌåÅ¨¶È (PPM)
-  * @param  ÎÞ
-  * @retval Å¨¶ÈÖµ (µ¥Î»: PPM)
-  * @note   ÐèÒªÏÈµ÷ÓÃ MQ2_Calibrate() ½øÐÐÐ£×¼
-  */
+/*
+ * è¯»å–çƒŸé›¾æµ“åº¦
+ * è¿”å›žPPMå€¼
+ */
 float MQ2_GetPPM(void)
 {
     float ratio = MQ2_GetRatio();
     float ppm;
-    
+
     if(ratio <= 0.01f) ratio = 0.01f;
-    
-    /* Ê¹ÓÃÃÝº¯Êý¹«Ê½: ppm = A * (ratio)^B */
+
     ppm = MQ2_CURVE_A * powf(ratio, MQ2_CURVE_B);
-    
-    /* ÏÞÖÆÊä³ö·¶Î§ */
+
     if(ppm < 0) ppm = 0;
     if(ppm > 10000) ppm = 10000;
-    
+
     return ppm;
 }
 
-/**
-  * @brief  »ñÈ¡±¨¾¯×´Ì¬ (»ùÓÚ PPM Å¨¶È)
-  * @param  ÎÞ
-  * @retval 0: Õý³£, 1: ±¨¾¯ (PPM > 100)
-  */
+/*
+ * è¯»å–æŠ¥è­¦çŠ¶æ€
+ * è¶…è¿‡é˜ˆå€¼æ—¶è¿”å›ž1
+ */
 u8 MQ2_GetAlarmStatus(void)
 {
     float ppm = MQ2_GetPPM();
-    
+
     if(ppm > MQ2_ALARM_PPM_THRESHOLD)
         return 1;
     else

@@ -1,64 +1,68 @@
 #include "gp2y.h"
 #include "delay.h"
 
-/* =========================================================
- * πÿº¸≤Œ ˝£®Ω®“È∫Û∆⁄∏˘æ› µº ª∑æ≥–£◊º£©
- * =========================================================
- */
+#define GP2Y_LED_ON()              GPIO_SetBits(GP2Y_ILED_PORT, GP2Y_ILED_PIN)
+#define GP2Y_LED_OFF()             GPIO_ResetBits(GP2Y_ILED_PORT, GP2Y_ILED_PIN)
 
-// ADC≤ŒøºµÁ—π
-#define GP2Y_ADC_REF_VOLTAGE      3.3f
+#define GP2Y_ADC_REF_MV           3300.0f
+#define GP2Y_ADC_MAX_VALUE        4096.0f
+#define GP2Y_DIVIDER_RATIO        11.0f
+#define GP2Y_FILTER_COUNT         10
+#define NO_DUST_VOLTAGE           330.0f
+#define COV_RATIO                 0.20f
 
-// 12ŒªADC◊Ó¥Û÷µ
-#define GP2Y_ADC_MAX_VALUE        4095.0f
-
-// ?? Œﬁ≥æµÁ—π£®Ω®“È∫Û∆⁄ µº ≤‚¡ø£©
-#define GP2Y_CLEAN_AIR_VOLTAGE    0.9f
-
-// ¡È√Ù∂»£∫0.5V / (0.1 mg/m3)
-#define GP2Y_SENSITIVITY          0.5f
-
-
-/* =========================================================
- * ∫Ø ˝£∫µ•¥ŒADC≤…—˘
- * =========================================================
+/*
+ * ÂçïÊ¨°ADCÈááÊ†∑
+ * Âè™Ë¥üË¥£ËØªÂèñ‰∏ÄÊ¨°ADCËΩ¨Êç¢ÂÄº
  */
 static uint16_t GP2Y_ADC_ReadOnce(void)
 {
-    // …Ë÷√ ADC Õ®µ¿£®PA5 = Channel 5£©
     ADC_RegularChannelConfig(GP2Y_ADC,
                              GP2Y_ADC_CHANNEL,
                              1,
                              ADC_SampleTime_480Cycles);
 
-    // «Â≥˝◊™ªªÕÍ≥…±Í÷æ
     ADC_ClearFlag(GP2Y_ADC, ADC_FLAG_EOC);
-
-    // ∆Ù∂Ø ADC ◊™ªª
     ADC_SoftwareStartConv(GP2Y_ADC);
 
-    // µ»¥˝◊™ªªÕÍ≥…
     while (ADC_GetFlagStatus(GP2Y_ADC, ADC_FLAG_EOC) == RESET);
 
     return ADC_GetConversionValue(GP2Y_ADC);
 }
 
-
-/* =========================================================
- * ≥ı ºªØ∫Ø ˝
- * =========================================================
+/*
+ * ADCÂπ≥ÂùáÊª§Ê≥¢
+ * ËøûÁª≠ËØªÂèñÂ§öÊ¨°ÂêéÂèñÂπ≥ÂùáÂÄº
  */
+static uint16_t GP2Y_FilterAdc(uint8_t times)
+{
+    uint8_t i;
+    uint32_t sum = 0;
+
+    if (times == 0)
+        times = 1;
+
+    for (i = 0; i < times; i++)
+    {
+        sum += GP2Y_ADC_ReadOnce();
+    }
+
+    return (uint16_t)(sum / times);
+}
+
+/**
+  * @brief  ÂàùÂßãÂåñGP2YÊéßÂà∂ÂºïËÑöÂíåADC
+  * @note   ILED‰ΩøÁî®È´òÁîµÂπ≥ÁÇπ‰∫ÆÔºåPA5‰Ωú‰∏∫Ê®°ÊãüËæìÂÖ•
+  */
 void GP2Y_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
     ADC_InitTypeDef ADC_InitStructure;
     ADC_CommonInitTypeDef ADC_CommonInitStructure;
 
-    // ø™∆Ù GPIO ∫Õ ADC  ±÷”
     RCC_AHB1PeriphClockCmd(GP2Y_ILED_RCC | GP2Y_ADC_RCC, ENABLE);
     RCC_APB2PeriphClockCmd(GP2Y_ADC_CLK, ENABLE);
 
-    /* ===== ILED øÿ÷∆“˝Ω≈ ===== */
     GPIO_InitStructure.GPIO_Pin = GP2Y_ILED_PIN;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
@@ -66,16 +70,13 @@ void GP2Y_Init(void)
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
     GPIO_Init(GP2Y_ILED_PORT, &GPIO_InitStructure);
 
-    // ƒ¨»œπÿ±’LED£®∏ﬂµÁ∆Ω£©
-    GPIO_SetBits(GP2Y_ILED_PORT, GP2Y_ILED_PIN);
+    GP2Y_LED_OFF();
 
-    /* ===== ADC  ‰»Î“˝Ω≈£®PA5£©===== */
     GPIO_InitStructure.GPIO_Pin = GP2Y_ADC_PIN;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
     GPIO_Init(GP2Y_ADC_PORT, &GPIO_InitStructure);
 
-    /* ===== ADC π´π≤≈‰÷√ ===== */
     ADC_CommonStructInit(&ADC_CommonInitStructure);
     ADC_CommonInitStructure.ADC_Mode = ADC_Mode_Independent;
     ADC_CommonInitStructure.ADC_Prescaler = ADC_Prescaler_Div4;
@@ -83,7 +84,6 @@ void GP2Y_Init(void)
     ADC_CommonInitStructure.ADC_TwoSamplingDelay = ADC_TwoSamplingDelay_5Cycles;
     ADC_CommonInit(&ADC_CommonInitStructure);
 
-    /* ===== ADC ≈‰÷√ ===== */
     ADC_StructInit(&ADC_InitStructure);
     ADC_InitStructure.ADC_Resolution = ADC_Resolution_12b;
     ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;
@@ -94,86 +94,59 @@ void GP2Y_Init(void)
     ADC_Cmd(GP2Y_ADC, ENABLE);
 }
 
-
-/* =========================================================
- * ∫À–ƒ∫Ø ˝£∫∞¥ ÷≤· ±–Ú∂¡»°
- *
- * πŸ∑ΩÕ∆ºˆ£∫
- * LED ON °˙ 280us °˙ ≤…—˘ °˙ 40us °˙ LED OFF °˙ 10ms÷‹∆⁄
- * =========================================================
- */
+/**
+  * @brief  ÊåâÂÆòÊñπÊó∂Â∫èËØªÂèñÂéüÂßãADCÂÄº
+  * @note   280usÂêéÈááÊ†∑ÔºåÁÇπ‰∫ÆÊÄªÂÆΩÂ∫¶0.32msÔºåÂë®Êúü10ms
+  */
 uint16_t GP2Y_ReadRaw(void)
 {
     uint16_t raw;
 
-    // 1. µ„¡¡LED£®µÕµÁ∆Ω£©
-    GPIO_ResetBits(GP2Y_ILED_PORT, GP2Y_ILED_PIN);
-
-    // 2. µ»¥˝ 280us£®π‚–≈∫≈Œ»∂®£©
+    GP2Y_LED_ON();
     delay_us(280);
-
-    // 3. ≤…—˘£®±ÿ–Î‘⁄LED¡¡∆⁄º‰£©
-    raw = GP2Y_ADC_ReadOnce();
-
-    // 4. ≤π◊„ LED µ„¡¡ ±º‰£®280 + 40 = 320us£©
+    raw = GP2Y_FilterAdc(GP2Y_FILTER_COUNT);
     delay_us(40);
-
-    // 5. πÿ±’ LED
-    GPIO_SetBits(GP2Y_ILED_PORT, GP2Y_ILED_PIN);
-
-    // ?? ±ÿ–Î±£÷§ 10ms ÷‹∆⁄£¨∑Ò‘Ú ˝æ›ª·¬“
+    GP2Y_LED_OFF();
     delay_us(9680);
 
     return raw;
 }
 
-
-/* =========================================================
- * ◊™µÁ—π
- * =========================================================
- */
+/**
+  * @brief  Ëé∑ÂèñÂΩìÂâçËæìÂá∫ÁîµÂéã
+  * @retval ËøîÂõûË°•ÂÅøÂàÜÂéãÂêéÁöÑÁîµÂéãÂÄºÔºåÂçï‰ΩçmV
+  */
 float GP2Y_ReadVoltage(void)
 {
     uint16_t raw = GP2Y_ReadRaw();
 
-    // ADC ◊™µÁ—ππ´ Ω
-    return raw * GP2Y_ADC_REF_VOLTAGE / GP2Y_ADC_MAX_VALUE;
+    return raw * GP2Y_ADC_REF_MV / GP2Y_ADC_MAX_VALUE * GP2Y_DIVIDER_RATIO;
 }
 
-
-/* =========================================================
- * ◊™≈®∂»£®ug/m3£©
- * =========================================================
- */
+/**
+  * @brief  Ëé∑ÂèñPM2.5ÊµìÂ∫¶
+  * @retval ËøîÂõûÊµìÂ∫¶ÂÄºÔºåÂçï‰Ωçug/m3
+  */
 float GP2Y_ReadDust_ugm3(void)
 {
-    float voltage;
-    float dust_mg;
-    float dust_ug;
+    float voltage_mv;
+    float pm;
 
-    voltage = GP2Y_ReadVoltage();
+    voltage_mv = GP2Y_ReadVoltage();
 
-    /*
-     * ◊™ªªπ´ Ω£∫
-     * ¶§V = Vout - Voc
-     * mg/m3 = ¶§V / K * 0.1
-     */
-    dust_mg = (voltage - GP2Y_CLEAN_AIR_VOLTAGE) / GP2Y_SENSITIVITY * 0.1f;
+    if (voltage_mv > NO_DUST_VOLTAGE)
+        pm = (voltage_mv - NO_DUST_VOLTAGE) * COV_RATIO;
+    else
+        pm = 0;
 
-    if (dust_mg < 0)
-        dust_mg = 0;
-
-    // mg/m3 °˙ ug/m3
-    dust_ug = dust_mg * 1000.0f;
-
-    return dust_ug;
+    return pm;
 }
 
-
-/* =========================================================
- * ∂‡¥Œ∆Ωæ˘¬À≤®
- * =========================================================
- */
+/**
+  * @brief  Ëé∑ÂèñÂπ≥ÂùáPM2.5ÊµìÂ∫¶
+  * @param  times: Âπ≥ÂùáÊ¨°Êï∞
+  * @retval ËøîÂõûÂπ≥ÂùáÂêéÁöÑÊµìÂ∫¶ÂÄº
+  */
 float GP2Y_ReadDustAverage_ugm3(uint8_t times)
 {
     uint8_t i;

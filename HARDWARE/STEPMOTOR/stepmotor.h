@@ -3,7 +3,11 @@
 
 #include "stm32f4xx.h"
 
-// Òı½Å¶¨Òå£¨¿É¸ù¾İÊµ¼Ê½ÓÏßĞŞ¸Ä£©
+/*
+ * æ­¥è¿›ç”µæœºå¼•è„šå®šä¹‰
+ * å››ç›¸æ§åˆ¶è„šæ¥GPIOD
+ * å¯æ ¹æ®å®é™…æ¥çº¿è°ƒæ•´
+ */
 #define IN1_PORT      GPIOD
 #define IN1_PIN       GPIO_Pin_4
 #define IN2_PORT      GPIOD
@@ -13,9 +17,11 @@
 #define IN4_PORT      GPIOD
 #define IN4_PIN       GPIO_Pin_7
 
-// º¯ÊıÉùÃ÷
-void Stepper_Init(void);                           // ³õÊ¼»¯GPIO
-void Stepper_Output(uint8_t step_index);           // Êä³öÒ»ÅÄ£¨0~7£©
-void Stepper_Rotate_Clockwise(uint32_t steps, uint16_t step_delay_ms);  // Ë³Ê±Õë×ª¶¯Ö¸¶¨²½Êı
+/*
+ * å¯¹å¤–æ¥å£å‡½æ•°
+ */
+void Stepper_Init(void);                                        // åˆå§‹åŒ–æ­¥è¿›ç”µæœº
+void Stepper_Output(uint8_t step_index);                        // è¾“å‡ºä¸€æ­¥
+void Stepper_Rotate_Clockwise(uint32_t steps, uint16_t step_delay_ms); // é¡ºæ—¶é’ˆè½¬åŠ¨
 
 #endif

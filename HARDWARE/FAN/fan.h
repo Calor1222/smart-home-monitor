@@ -3,20 +3,23 @@
 
 #include "sys.h"
 
-// ·çÉÈ¿ØÖÆÒı½Å¶¨Òå
+/*
+ * é£æ‰‡æ§åˆ¶å¼•è„šå®šä¹‰
+ * PWMè¾“å‡ºæ¥PB6
+ * ä½¿ç”¨TIM4é€šé“1è¾“å‡ºPWM
+ */
 #define FAN_PWM_PIN      GPIO_Pin_6
 #define FAN_PWM_PORT     GPIOB
 #define FAN_PWM_AF       GPIO_AF_TIM4
 #define FAN_TIM          TIM4
 #define FAN_TIM_CHANNEL  TIM_Channel_1
 
-// ·çÉÈ×ªËÙµÈ¼¶£¨0-100£©
-void Fan_SetSpeed(u8 percent);
-// ·çÉÈÆô¶¯£¨Ä¬ÈÏ50%×ªËÙ£©
-void Fan_On(void);
-// ·çÉÈÍ£Ö¹
-void Fan_Off(void);
-// ·çÉÈ³õÊ¼»¯
-void Fan_Init(void);
+/*
+ * å¯¹å¤–æ¥å£å‡½æ•°
+ */
+void Fan_SetSpeed(u8 percent);  // è®¾ç½®é£æ‰‡è½¬é€Ÿ
+void Fan_On(void);              // å¼€å¯é£æ‰‡
+void Fan_Off(void);             // å…³é—­é£æ‰‡
+void Fan_Init(void);            // åˆå§‹åŒ–é£æ‰‡
 
 #endif

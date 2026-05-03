@@ -42,3 +42,7 @@
 ..\obj\main.o: ..\HARDWARE\ESP8266\esp8266.h
 ..\obj\main.o: ..\HARDWARE\DHT11\dht11.h
 ..\obj\main.o: ..\HARDWARE\MQ2\mq2.h
+..\obj\main.o: ..\HARDWARE\GP2Y\gp2y.h
+..\obj\main.o: ..\HARDWARE\ATOMIZER\atomizer.h
+..\obj\main.o: ..\HARDWARE\LCD\lcd.h
+..\obj\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h

@@ -4,20 +4,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-//////////////////////////////////////////////////////////////////////////////////
-// 全局变量
-//////////////////////////////////////////////////////////////////////////////////
+/*
+ * 接收缓冲区
+ * 用于保存模块完整返回内容
+ */
 u8 esp_rx_buffer[ESP8266_RX_BUFFER_SIZE];   // ESP8266接收缓冲区
-u8 esp_rx_flag = 0;             // 接收完成标志
-u16 esp_rx_len = 0;             // 接收数据长度
+u8 esp_rx_flag = 0;                         // 接收完成标志
+u16 esp_rx_len = 0;                         // 接收数据长度
 
 // 连接状态标志
 u8 wifi_connected = 0;          // WiFi连接状态
 u8 onenet_connected = 0;        // OneNet连接状态
 
-//////////////////////////////////////////////////////////////////////////////////
-// 延时函数(简单延时，ms)
-//////////////////////////////////////////////////////////////////////////////////
+/*
+ * 简单软件延时
+ * 用于AT命令等待期间
+ */
 void esp_delay_ms(u16 nms)
 {
     u32 i;
@@ -28,9 +30,10 @@ void esp_delay_ms(u16 nms)
     }
 }
 
-//////////////////////////////////////////////////////////////////////////////////
-// 清空接收缓冲区
-//////////////////////////////////////////////////////////////////////////////////
+/*
+ * 清空接收缓冲区
+ * 发送新命令前调用
+ */
 void esp_clear_buffer(void)
 {
     u16 i;
@@ -40,9 +43,10 @@ void esp_clear_buffer(void)
     esp_rx_flag = 0;
 }
 
-//////////////////////////////////////////////////////////////////////////////////
-// 串口3发送字符串函数（修正版）
-//////////////////////////////////////////////////////////////////////////////////
+/**
+  * @brief  串口3发送字符串
+  * @param  str: 待发送字符串
+  */
 void USART3_SendString(char *str)
 {
     while(*str)
@@ -52,9 +56,10 @@ void USART3_SendString(char *str)
     }
 }
 
-//////////////////////////////////////////////////////////////////////////////////
-// 发送AT指令
-//////////////////////////////////////////////////////////////////////////////////
+/*
+ * 等待两个关键字中的任意一个
+ * 用于判断AT命令是否成功
+ */
 static u8 esp8266_wait_ack(const char *ack1, const char *ack2, u16 timeout)
 {
     u16 elapsed = 0;
@@ -80,6 +85,10 @@ static u8 esp8266_wait_ack(const char *ack1, const char *ack2, u16 timeout)
     return 0;
 }
 
+/*
+ * 等待三个关键字中的任意一个
+ * 用于发布数据后的返回判断
+ */
 static u8 esp8266_wait_ack3(const char *ack1, const char *ack2, const char *ack3, u16 timeout)
 {
     u16 elapsed = 0;
@@ -106,6 +115,10 @@ static u8 esp8266_wait_ack3(const char *ack1, const char *ack2, const char *ack3
     return 0;
 }
 
+/*
+ * 发送AT命令并等待返回
+ * 支持两个成功关键字
+ */
 static u8 esp8266_cmd_send_multi(char *cmd, const char *ack1, const char *ack2, u16 timeout)
 {
     u8 ok;
@@ -125,14 +138,23 @@ static u8 esp8266_cmd_send_multi(char *cmd, const char *ack1, const char *ack2, 
     return ok;
 }
 
+/**
+  * @brief  发送AT命令
+  * @param  cmd: 命令字符串
+  * @param  ack: 成功关键字
+  * @param  timeout: 超时时间
+  * @retval 1成功，0失败
+  */
 u8 esp8266_cmd_send(char *cmd, char *ack, u16 timeout)
 {
     return esp8266_cmd_send_multi(cmd, ack, NULL, timeout);
 }
 
-//////////////////////////////////////////////////////////////////////////////////
-// 检查AT指令是否成功
-//////////////////////////////////////////////////////////////////////////////////
+/**
+  * @brief  检查缓冲区中是否包含关键字
+  * @param  ack: 目标关键字
+  * @retval 1找到，0未找到
+  */
 u8 esp8266_check_cmd(char *ack)
 {
     if(strstr((char*)esp_rx_buffer, ack) != NULL)
@@ -140,9 +162,10 @@ u8 esp8266_check_cmd(char *ack)
     return 0;
 }
 
-//////////////////////////////////////////////////////////////////////////////////
-// ESP8266初始化
-//////////////////////////////////////////////////////////////////////////////////
+/**
+  * @brief  初始化ESP8266模块
+  * @note   完成AT测试、关闭回显、设置模式和查询版本
+  */
 void esp8266_init(void)
 {
     printf("\r\n========== ESP8266 init start ==========\r\n");
@@ -164,9 +187,10 @@ void esp8266_init(void)
     printf("========== ESP8266 init done ==========\r\n");
 }
 
-//////////////////////////////////////////////////////////////////////////////////
-// 连接WiFi
-//////////////////////////////////////////////////////////////////////////////////
+/**
+  * @brief  连接WiFi
+  * @note   连接成功后会查询当前IP
+  */
 void esp8266_connect_wifi(void)
 {
     char cmd[256];
@@ -184,9 +208,10 @@ void esp8266_connect_wifi(void)
     printf("WiFi connect done\r\n");
 }
 
-//////////////////////////////////////////////////////////////////////////////////
-// 配置MQTT连接并连接OneNet
-//////////////////////////////////////////////////////////////////////////////////
+/**
+  * @brief  连接OneNET平台
+  * @note   以MQTT连接成功作为最终判断
+  */
 void esp8266_connect_onenet(void)
 {
     char cmd[512];
@@ -211,6 +236,10 @@ void esp8266_connect_onenet(void)
     esp8266_subscribe_property_reply();
 }
 
+/**
+  * @brief  订阅属性上报回执主题
+  * @note   用于接收OneNET返回的code和msg
+  */
 void esp8266_subscribe_property_reply(void)
 {
     char cmd[256];
@@ -224,6 +253,11 @@ void esp8266_subscribe_property_reply(void)
     delay_ms(1000);
 }
 
+/**
+  * @brief  发布MQTT原始数据
+  * @param  topic: 发布主题
+  * @param  payload: 发布内容
+  */
 void esp8266_mqtt_publish(const char *topic, const char *payload)
 {
     char cmd[256];
@@ -240,27 +274,39 @@ void esp8266_mqtt_publish(const char *topic, const char *payload)
         printf("ESP8266 CMD ERROR: payload\r\n");
 }
 
-void esp8266_onenet_post_property(float temp, float hum, float smoke)
+/**
+  * @brief  上报传感器属性到OneNET
+  * @param  temp: 温度值
+  * @param  hum: 湿度值
+  * @param  smoke: 烟雾值
+  * @param  pm: PM2.5值
+  */
+void esp8266_onenet_post_property(float temp, float hum, float smoke, float pm)
 {
-    char payload[256];
+    char payload[320];
     int smoke_value = (int)(smoke + 0.5f);
+    float pm_upload = ((int)(pm * 10 + 0.5f)) / 10.0f;
 
     sprintf(payload,
         "{\"id\":\"1\",\"version\":\"1.0\",\"params\":{"
         "\"Temp\":{\"value\":%.2f},"
         "\"Hum\":{\"value\":%.2f},"
-        "\"Smoke\":{\"value\":%d}"
+        "\"Smoke\":{\"value\":%d},"
+        "\"%s\":{\"value\":%.1f}"
         "}}",
-        temp, hum, smoke_value);
+        temp, hum, smoke_value,
+        PROPERTY_PM, pm_upload);
 
     esp8266_mqtt_publish(ONENET_PROPERTY_POST_TOPIC, payload);
     delay_ms(5000);
     printf("ESP8266 AFTER PUBLISH BUFFER: %s\r\n", esp_rx_buffer);
 }
 
-//////////////////////////////////////////////////////////////////////////////////
-// 发送数据到OneNet
-//////////////////////////////////////////////////////////////////////////////////
+/**
+  * @brief  发送旧版数据到OneNET
+  * @param  data: 数据内容
+  * @param  len: 数据长度
+  */
 void esp8266_send_data(char *data, u16 len)
 {
     char cmd[100];
@@ -278,9 +324,11 @@ void esp8266_send_data(char *data, u16 len)
     printf("数据发送成功: %s\r\n", data);
 }
 
-//////////////////////////////////////////////////////////////////////////////////
-// 发送传感器数据到OneNet (格式: datastream,value)
-//////////////////////////////////////////////////////////////////////////////////
+/**
+  * @brief  发送单个传感器数据
+  * @param  datastream: 数据流名称
+  * @param  value: 数据值
+  */
 void esp8266_send_sensor_data(char *datastream, float value)
 {
     char data[100];
@@ -293,9 +341,10 @@ void esp8266_send_sensor_data(char *datastream, float value)
     esp8266_send_data(data, strlen(data));
 }
 
-//////////////////////////////////////////////////////////////////////////////////
-// 发送多个数据点
-//////////////////////////////////////////////////////////////////////////////////
+/**
+  * @brief  发送多个数据点
+  * @param  pm: PM数据
+  */
 void esp8266_send_multi_data(float pm)
 {
     char data[200];
@@ -305,9 +354,10 @@ void esp8266_send_multi_data(float pm)
     esp8266_send_data(data, strlen(data));
 }
 
-//////////////////////////////////////////////////////////////////////////////////
-// ESP8266数据处理（在串口3中断中调用）
-//////////////////////////////////////////////////////////////////////////////////
+/**
+  * @brief  处理串口3接收到的字节
+  * @param  res: 当前接收到的字节
+  */
 void esp8266_data_handle(u8 res)
 {
     if(esp_rx_len < sizeof(esp_rx_buffer) - 1)

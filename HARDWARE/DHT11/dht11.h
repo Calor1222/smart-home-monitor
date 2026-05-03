@@ -1,45 +1,26 @@
 #ifndef __DHT11_H
-#define __DHT11_H 
-#include "sys.h"   
-//////////////////////////////////////////////////////////////////////////////////	 
-//±¾³ÌÐòÖ»¹©Ñ§Ï°Ê¹ÓÃ£¬Î´¾­×÷ÕßÐí¿É£¬²»µÃÓÃÓÚÆäËüÈÎºÎÓÃÍ¾
-//ALIENTEK STM32F407¿ª·¢°å
-//DHT11 Çý¶¯´úÂë	   
-//ÕýµãÔ­×Ó@ALIENTEK
-//¼¼ÊõÂÛÌ³:www.openedv.com
-//´´½¨ÈÕÆÚ:2014/5/7
-//°æ±¾£ºV1.0
-//°æÈ¨ËùÓÐ£¬µÁ°æ±Ø¾¿¡£
-//Copyright(C) ¹ãÖÝÊÐÐÇÒíµç×Ó¿Æ¼¼ÓÐÏÞ¹«Ë¾ 2014-2024
-//All rights reserved										  
-//////////////////////////////////////////////////////////////////////////////////
+#define __DHT11_H
 
-//IO·½ÏòÉèÖÃ
-#define DHT11_IO_IN()  {GPIOG->MODER&=~(3<<(9*2));GPIOG->MODER|=0<<9*2;}	//PG9ÊäÈëÄ£Ê½
-#define DHT11_IO_OUT() {GPIOG->MODER&=~(3<<(9*2));GPIOG->MODER|=1<<9*2;} 	//PG9Êä³öÄ£Ê½ 
-////IO²Ù×÷º¯Êý											   
-#define	DHT11_DQ_OUT PGout(9) //Êý¾Ý¶Ë¿Ú	PG9 
-#define	DHT11_DQ_IN  PGin(9)  //Êý¾Ý¶Ë¿Ú	PG9 
+#include "sys.h"
 
-u8 DHT11_Init(void);//³õÊ¼»¯DHT11
-u8 DHT11_Read_Data(u8 *temp,u8 *humi);//¶ÁÈ¡ÎÂÊª¶È
-u8 DHT11_Read_Byte(void);//¶Á³öÒ»¸ö×Ö½Ú
-u8 DHT11_Read_Bit(void);//¶Á³öÒ»¸öÎ»
-u8 DHT11_Check(void);//¼ì²âÊÇ·ñ´æÔÚDHT11
-void DHT11_Rst(void);//¸´Î»DHT11    
+/*
+ * DHT11å¼•è„šå®šä¹‰
+ * æ•°æ®è„šæŽ¥PG9
+ * é€šè¿‡è¾“å…¥è¾“å‡ºåˆ‡æ¢å®Œæˆæ—¶åºé€šä¿¡
+ */
+#define DHT11_IO_IN()  {GPIOG->MODER &= ~(3 << (9 * 2)); GPIOG->MODER |= 0 << (9 * 2);}
+#define DHT11_IO_OUT() {GPIOG->MODER &= ~(3 << (9 * 2)); GPIOG->MODER |= 1 << (9 * 2);}
+#define DHT11_DQ_OUT   PGout(9)   // æ•°æ®è¾“å‡ºè„š
+#define DHT11_DQ_IN    PGin(9)    // æ•°æ®è¾“å…¥è„š
+
+/*
+ * å¯¹å¤–æŽ¥å£å‡½æ•°
+ */
+u8 DHT11_Init(void);                 // åˆå§‹åŒ–DHT11
+u8 DHT11_Read_Data(u8 *temp,u8 *humi); // è¯»å–æ¸©æ¹¿åº¦
+u8 DHT11_Read_Byte(void);            // è¯»å–ä¸€ä¸ªå­—èŠ‚
+u8 DHT11_Read_Bit(void);             // è¯»å–ä¸€ä¸ªä½
+u8 DHT11_Check(void);                // æ£€æŸ¥æ¨¡å—å“åº”
+void DHT11_Rst(void);                // å¤ä½DHT11
+
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -3,10 +3,10 @@
 
 #include "sys.h"
 
-//////////////////////////////////////////////////////////////////////////////////
-// ESP8266-01S 驱动代码 - 连接OneNet云平台
-// 使用串口3: TX-PB10, RX-PB11
-//////////////////////////////////////////////////////////////////////////////////
+/*
+ * ESP8266模块参数定义
+ * 使用串口3与模块通信
+ */
 
 // ESP8266工作模式
 #define ESP_MODE_STATION     1   //  Station模式
@@ -25,9 +25,13 @@
 #define ONENET_USERNAME      PRODUCT_ID
 #define ONENET_PASSWORD      DEVICE_TOKEN
 
+/*
+ * OneNET属性定义
+ */
 #define PROPERTY_TEMP        "Temp"
 #define PROPERTY_HUM         "Hum"
 #define PROPERTY_SMOKE       "Smoke"
+#define PROPERTY_PM          "pm"
 
 #define ONENET_PROPERTY_POST_TOPIC "$sys/" PRODUCT_ID "/" DEVICE_NAME "/thing/property/post"
 #define ONENET_PROPERTY_POST_REPLY_TOPIC "$sys/" PRODUCT_ID "/" DEVICE_NAME "/thing/property/post/reply"
@@ -40,11 +44,15 @@
 #define ESP_CMD_TIMEOUT      5000
 #define ESP8266_RX_BUFFER_SIZE 2048
 
-// 外部变量声明（重要！）
+/*
+ * 外部状态变量
+ */
 extern u8 wifi_connected;      // WiFi连接状态
 extern u8 onenet_connected;    // OneNet连接状态
 
-// 函数声明
+/*
+ * 对外接口函数
+ */
 void esp8266_init(void);                                        // ESP8266初始化
 u8   esp8266_cmd_send(char *cmd, char *ack, u16 timeout);       // 发送AT指令
 u8   esp8266_check_cmd(char *ack);                              // 检查指令返回
@@ -55,7 +63,7 @@ void esp8266_receive_data(void);                                // 接收数据�
 void esp8266_send_sensor_data(char *datastream, float value);   // 发送传感器数据
 void esp8266_send_multi_data(float pm);           // 发送多个数据
 void esp8266_mqtt_publish(const char *topic, const char *payload);
-void esp8266_onenet_post_property(float temp, float hum, float smoke);
+void esp8266_onenet_post_property(float temp, float hum, float smoke, float pm);
 void esp8266_subscribe_property_reply(void);
 void USART3_SendString(char *str);                              // 串口3发送字符串
 void esp8266_data_handle(u8 res);                               // ESP8266数据处理

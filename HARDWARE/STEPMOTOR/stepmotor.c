@@ -2,67 +2,71 @@
 #include "delay.h"
 #include "stepmotor.h"
 
-// ²½½øµç»úËÄÏà°ËÅÄÕı×ª£¨Ë³Ê±Õë£©ÏàĞò±í
-// Êı×éÔªËØ£º{IN1, IN2, IN3, IN4} µçÆ½×´Ì¬ (1=¸ßµçÆ½, 0=µÍµçÆ½)
-// ×¢Òâ£ºULN2003 ÊÇµÍµçÆ½ÓĞĞ§£¬µ«ÕâÀïÎÒÃÇ°´Õı³£Âß¼­Ğ´ 1/0£¬
-// Êµ¼ÊÊä³öÊ±ÓÃ GPIO_SetBits / GPIO_ResetBits ¿ØÖÆ£¬ÎŞĞè·´Ïò¡£
+/*
+ * æ­¥è¿›ç”µæœºç›¸åºè¡¨
+ * ä½¿ç”¨å››ç›¸å…«æ‹æ–¹å¼é©±åŠ¨
+ */
 const uint8_t step_sequence[8][4] = {
-    {1, 0, 0, 0},   // A
-    {1, 1, 0, 0},   // AB
-    {0, 1, 0, 0},   // B
-    {0, 1, 1, 0},   // BC
-    {0, 0, 1, 0},   // C
-    {0, 0, 1, 1},   // CD
-    {0, 0, 0, 1},   // D
-    {1, 0, 0, 1}    // DA
+    {1, 0, 0, 0},
+    {1, 1, 0, 0},
+    {0, 1, 0, 0},
+    {0, 1, 1, 0},
+    {0, 0, 1, 0},
+    {0, 0, 1, 1},
+    {0, 0, 0, 1},
+    {1, 0, 0, 1}
 };
 
-// ³õÊ¼»¯²½½øµç»ú GPIO
+/*
+ * åˆå§‹åŒ–æ­¥è¿›ç”µæœº
+ * é…ç½®å››ä¸ªæ§åˆ¶è„šä¸ºè¾“å‡º
+ */
 void Stepper_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct;
 
-    // Ê¹ÄÜ GPIOD Ê±ÖÓ
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
     GPIO_InitStruct.GPIO_Pin   = IN1_PIN | IN2_PIN | IN3_PIN | IN4_PIN;
     GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
-    GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;      // ÍÆÍìÊä³ö
+    GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStruct.GPIO_PuPd  = GPIO_PuPd_NOPULL;
     GPIO_Init(IN1_PORT, &GPIO_InitStruct);
 
-    // ³õÊ¼È«²¿ÖÃµÍµçÆ½£¨µç»ú²»×ª£©
     GPIO_ResetBits(IN1_PORT, IN1_PIN);
     GPIO_ResetBits(IN2_PORT, IN2_PIN);
     GPIO_ResetBits(IN3_PORT, IN3_PIN);
     GPIO_ResetBits(IN4_PORT, IN4_PIN);
 }
 
-// Êä³öÒ»²½£¨¸ù¾İÏàĞò±í£©
+/*
+ * è¾“å‡ºä¸€æ­¥
+ * æ ¹æ®ç›¸åºè¡¨è®¾ç½®å››ç›¸çŠ¶æ€
+ */
 void Stepper_Output(uint8_t step_index)
 {
-    // step_index ·¶Î§ 0~7
     GPIO_WriteBit(IN1_PORT, IN1_PIN, (BitAction)step_sequence[step_index][0]);
     GPIO_WriteBit(IN2_PORT, IN2_PIN, (BitAction)step_sequence[step_index][1]);
     GPIO_WriteBit(IN3_PORT, IN3_PIN, (BitAction)step_sequence[step_index][2]);
     GPIO_WriteBit(IN4_PORT, IN4_PIN, (BitAction)step_sequence[step_index][3]);
 }
 
-// Ë³Ê±Õë×ª¶¯¹Ì¶¨²½Êı£¨Ã¿²½µÄÑÓÊ±¾ö¶¨×ªËÙ£©
-// steps£º²½Êı£¨1²½¶ÔÓ¦°ËÅÄÖĞµÄÒ»ÅÄ£¬Êµ¼Êµç»ú×ª¶¯µÄ»úĞµ½Ç¶ÈÈ¡¾öÓÚ¼õËÙ±È£©
-// step_delay_ms£ºÃ¿²½Ö®¼äµÄÑÓÊ±£¨ºÁÃë£©£¬½¨Òé 2~10ms
+/*
+ * é¡ºæ—¶é’ˆè½¬åŠ¨æ­¥è¿›ç”µæœº
+ * stepsæ§åˆ¶æ­¥æ•°ï¼Œstep_delay_msæ§åˆ¶é€Ÿåº¦
+ */
 void Stepper_Rotate_Clockwise(uint32_t steps, uint16_t step_delay_ms)
 {
     for(uint32_t i = 0; i < steps; i++)
     {
-        for(uint8_t j = 0; j < 8; j++)      // Ñ­»·Êä³ö°ËÅÄ
+        for(uint8_t j = 0; j < 8; j++)
         {
             Stepper_Output(j);
             delay_ms(step_delay_ms);
         }
     }
-    // Í£Ö¹Ê±ÊÍ·ÅËùÓĞÏßÈ¦£¨¿ÉÑ¡£©
+
     GPIO_ResetBits(IN1_PORT, IN1_PIN);
     GPIO_ResetBits(IN2_PORT, IN2_PIN);
     GPIO_ResetBits(IN3_PORT, IN3_PIN);

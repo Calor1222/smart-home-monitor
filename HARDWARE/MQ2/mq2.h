@@ -1,49 +1,42 @@
-/**
-  ******************************************************************************
-  * @file    mq2.h
-  * @author  MQ-2 Driver
-  * @version V1.0
-  * @date    2026-04-16
-  * @brief   MQ-2 ÑÌÎí´«¸ĞÆ÷Çı¶¯Í·ÎÄ¼ş
-  ******************************************************************************
-  */
-
 #ifndef __MQ2_H
 #define __MQ2_H
 
 #include "sys.h"
 #include "delay.h"
 
-/* Òı½Å¶¨Òå - ¿É¸ù¾İÊµ¼Ê½ÓÏßĞŞ¸Ä */
+/*
+ * MQ2å¼•è„šå®šä¹‰
+ * DOæ¥PA0
+ * AOæ¥PC1
+ */
 #define MQ2_DO_GPIO_PORT        GPIOA
 #define MQ2_DO_PIN              GPIO_Pin_0
 
 #define MQ2_AO_ADC              ADC1
-#define MQ2_AO_ADC_CHANNEL      ADC_Channel_11   /* PC1 ¶ÔÓ¦ ADC123_IN11 */
+#define MQ2_AO_ADC_CHANNEL      ADC_Channel_11
 #define MQ2_AO_GPIO_PORT        GPIOC
 #define MQ2_AO_PIN              GPIO_Pin_1
 
-/* ´«¸ĞÆ÷Ğ£×¼²ÎÊı - ½à¾»¿ÕÆøÖĞ Rs/Ro µäĞÍÖµÔ¼ 6.5 */
+/*
+ * MQ2å‚æ•°å®šä¹‰
+ * ç”¨äºæ ¡å‡†å’Œæµ“åº¦è®¡ç®—
+ */
 #define MQ2_CLEAN_AIR_RATIO     6.5f
-
-/* ADC ÅäÖÃ */
-#define ADC_REF_VOLTAGE         3.3f    /* STM32F407 ²Î¿¼µçÑ¹ 3.3V */
-#define ADC_MAX_VALUE           4095.0f /* 12Î» ADC ×î´óÖµ */
-
-/* Ä£¿éÓ²¼ş²ÎÊı (¿É¸ù¾İÊµ¼ÊÄ£¿éµ÷Õû) */
-#define MQ2_RL                  5.0f    /* Ä£¿é¸ºÔØµç×è (k¦¸) */
-#define MQ2_VCC                 5.0f    /* Ä£¿é¹©µçµçÑ¹ (V) */
-
-/* ±¨¾¯ãĞÖµ - PPM > 100 Ê±±¨¾¯ */
+#define ADC_REF_VOLTAGE         3.3f
+#define ADC_MAX_VALUE           4095.0f
+#define MQ2_RL                  5.0f
+#define MQ2_VCC                 5.0f
 #define MQ2_ALARM_PPM_THRESHOLD 100.0f
 
-/* º¯ÊıÉùÃ÷ */
-void MQ2_Init(void);                    /* ³õÊ¼»¯ GPIO ºÍ ADC */
-void MQ2_Calibrate(void);               /* Ğ£×¼´«¸ĞÆ÷£¬»ñÈ¡ Ro Öµ */
-u8   MQ2_GetDigitalOutput(void);        /* »ñÈ¡ DO Òı½ÅµçÆ½ (Ó²¼ş±¨¾¯) */
-float MQ2_GetVoltage(void);             /* »ñÈ¡ AO Òı½ÅµçÑ¹ (V) */
-float MQ2_GetRatio(void);               /* »ñÈ¡ Rs/Ro ±ÈÖµ */
-float MQ2_GetPPM(void);                 /* »ñÈ¡ÆøÌåÅ¨¶È (PPM) */
-u8   MQ2_GetAlarmStatus(void);          /* »ñÈ¡±¨¾¯×´Ì¬ (PPM > 100) */
+/*
+ * å¯¹å¤–æ¥å£å‡½æ•°
+ */
+void MQ2_Init(void);             // åˆå§‹åŒ–MQ2
+void MQ2_Calibrate(void);        // æ ¡å‡†MQ2
+u8   MQ2_GetDigitalOutput(void); // è¯»å–DOç”µå¹³
+float MQ2_GetVoltage(void);      // è¯»å–AOç”µå‹
+float MQ2_GetRatio(void);        // è¯»å–Rs/Ro
+float MQ2_GetPPM(void);          // è¯»å–æµ“åº¦
+u8   MQ2_GetAlarmStatus(void);   // è¯»å–æŠ¥è­¦çŠ¶æ€
 
-#endif /* __MQ2_H */
+#endif
