@@ -38,6 +38,7 @@ const controlState = {
     atomizer: false,
     motor: false
 };
+let globalMode = "auto";
 
 const MAX_HISTORY_POINTS = 20;
 let trendChart;
@@ -127,7 +128,8 @@ function createChartData(history) {
             {
                 label: "Temp",
                 data: limitedHistory.map(item => item.Temp),
-                borderColor: "#555555",
+                borderColor: "#ff6b6b",
+                backgroundColor: "rgba(255, 107, 107, 0.15)",
                 borderWidth: 1,
                 pointRadius: 2,
                 tension: 0
@@ -135,7 +137,8 @@ function createChartData(history) {
             {
                 label: "Hum",
                 data: limitedHistory.map(item => item.Hum),
-                borderColor: "#777777",
+                borderColor: "#4dabf7",
+                backgroundColor: "rgba(77, 171, 247, 0.15)",
                 borderWidth: 1,
                 pointRadius: 2,
                 tension: 0
@@ -143,7 +146,8 @@ function createChartData(history) {
             {
                 label: "Smoke",
                 data: limitedHistory.map(item => item.Smoke),
-                borderColor: "#999999",
+                borderColor: "#ffa94d",
+                backgroundColor: "rgba(255, 169, 77, 0.15)",
                 borderWidth: 1,
                 pointRadius: 2,
                 tension: 0
@@ -151,7 +155,8 @@ function createChartData(history) {
             {
                 label: "pm",
                 data: limitedHistory.map(item => item.pm),
-                borderColor: "#222222",
+                borderColor: "#69db7c",
+                backgroundColor: "rgba(105, 219, 124, 0.15)",
                 borderWidth: 1,
                 pointRadius: 2,
                 tension: 0
@@ -323,9 +328,32 @@ function updateControlButton(device) {
     button.classList.toggle("active", state);
 }
 
+function getGlobalModeLabel() {
+    return globalMode === "manual" ? "\u624b\u52a8\u6a21\u5f0f" : "\u81ea\u52a8\u6a21\u5f0f";
+}
+
+function updateGlobalModeButton() {
+    const button = document.getElementById("globalModeToggle");
+
+    button.textContent = getGlobalModeLabel();
+    button.classList.toggle("active", globalMode === "manual");
+}
+
+async function setGlobalMode(mode) {
+    globalMode = mode;
+    updateGlobalModeButton();
+    await sendControlCommand({
+        FanMode: mode,
+        AtomizerMode: mode,
+        MotorMode: mode
+    });
+}
+
 function handleControlToggle(device) {
     controlState[device] = !controlState[device];
+    globalMode = "manual";
     console.log("click control:", device, controlState[device]);
+    updateGlobalModeButton();
     updateControlButton(device);
     if (device === "atomizer") {
         sendControlCommand({
@@ -345,25 +373,16 @@ function handleControlToggle(device) {
     }
 }
 
-function handleAutoMode(device) {
-    if (device === "atomizer") {
-        sendControlCommand({ AtomizerMode: "auto" });
-    } else if (device === "fan") {
-        sendControlCommand({ FanMode: "auto" });
-    } else {
-        sendControlCommand({ MotorMode: "auto" });
-    }
-}
-
 function initControls() {
     ["fan", "atomizer", "motor"].forEach(device => {
         updateControlButton(device);
         document.getElementById(`${device}Control`).addEventListener("click", () => {
             handleControlToggle(device);
         });
-        document.getElementById(`${device}Auto`).addEventListener("click", () => {
-            handleAutoMode(device);
-        });
+    });
+    updateGlobalModeButton();
+    document.getElementById("globalModeToggle").addEventListener("click", () => {
+        setGlobalMode(globalMode === "auto" ? "manual" : "auto");
     });
 }
 
@@ -373,7 +392,4 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchOneNETData();
     setInterval(fetchOneNETData, 5000);
 });
-
-setInterval(fetchOneNETData, 5000);
-fetchOneNETData();
 
