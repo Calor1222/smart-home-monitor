@@ -230,7 +230,7 @@ function appendHistoryPoint(data) {
 
 async function fetchOneNETData() {
     try {
-        console.log("寮€濮嬭姹傛暟鎹?);
+        console.log("开始请求数据");
         console.log('璇锋眰URL:', CLOUD_FUNCTION_URL);
         console.log('璇锋眰浜戝嚱鏁?', CLOUD_FUNCTION_URL);
 
