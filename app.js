@@ -128,38 +128,42 @@ function createChartData(history) {
             {
                 label: "Temp",
                 data: limitedHistory.map(item => item.Temp),
-                borderColor: "#ff6b6b",
-                backgroundColor: "rgba(255, 107, 107, 0.15)",
-                borderWidth: 1,
-                pointRadius: 2,
-                tension: 0
+                borderColor: "#ff0000",
+                backgroundColor: "rgba(255, 0, 0, 0.15)",
+                borderWidth: 3,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                tension: 0.3
             },
             {
                 label: "Hum",
                 data: limitedHistory.map(item => item.Hum),
-                borderColor: "#4dabf7",
-                backgroundColor: "rgba(77, 171, 247, 0.15)",
-                borderWidth: 1,
-                pointRadius: 2,
-                tension: 0
+                borderColor: "#0000ff",
+                backgroundColor: "rgba(0, 0, 255, 0.15)",
+                borderWidth: 3,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                tension: 0.3
             },
             {
                 label: "Smoke",
                 data: limitedHistory.map(item => item.Smoke),
-                borderColor: "#ffa94d",
-                backgroundColor: "rgba(255, 169, 77, 0.15)",
-                borderWidth: 1,
-                pointRadius: 2,
-                tension: 0
+                borderColor: "#ffd700",
+                backgroundColor: "rgba(255, 215, 0, 0.15)",
+                borderWidth: 3,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                tension: 0.3
             },
             {
                 label: "pm",
                 data: limitedHistory.map(item => item.pm),
-                borderColor: "#69db7c",
-                backgroundColor: "rgba(105, 219, 124, 0.15)",
-                borderWidth: 1,
-                pointRadius: 2,
-                tension: 0
+                borderColor: "#00aa00",
+                backgroundColor: "rgba(0, 170, 0, 0.15)",
+                borderWidth: 3,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                tension: 0.3
             }
         ]
     };
