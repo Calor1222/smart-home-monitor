@@ -328,11 +328,30 @@ function handleControlToggle(device) {
     console.log("click control:", device, controlState[device]);
     updateControlButton(device);
     if (device === "atomizer") {
-        sendControlCommand({ AtomizerSwitch: controlState[device] });
+        sendControlCommand({
+            AtomizerMode: "manual",
+            AtomizerSwitch: controlState[device]
+        });
     } else if (device === "fan") {
-        sendControlCommand({ FanSwitch: controlState[device] });
+        sendControlCommand({
+            FanMode: "manual",
+            FanSwitch: controlState[device]
+        });
     } else {
-        sendControlCommand({ MotorSwitch: controlState[device] });
+        sendControlCommand({
+            MotorMode: "manual",
+            MotorSwitch: controlState[device]
+        });
+    }
+}
+
+function handleAutoMode(device) {
+    if (device === "atomizer") {
+        sendControlCommand({ AtomizerMode: "auto" });
+    } else if (device === "fan") {
+        sendControlCommand({ FanMode: "auto" });
+    } else {
+        sendControlCommand({ MotorMode: "auto" });
     }
 }
 
@@ -341,6 +360,9 @@ function initControls() {
         updateControlButton(device);
         document.getElementById(`${device}Control`).addEventListener("click", () => {
             handleControlToggle(device);
+        });
+        document.getElementById(`${device}Auto`).addEventListener("click", () => {
+            handleAutoMode(device);
         });
     });
 }
