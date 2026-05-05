@@ -1,4 +1,5 @@
 const CLOUD_FUNCTION_URL = "https://1347976579-cky20hoj3r.ap-guangzhou.tencentscf.com";
+console.log("app.js 已加载");
 
 const TEXT = {
     online: "\u5728\u7ebf",
@@ -228,12 +229,23 @@ function appendHistoryPoint(data) {
 
 async function fetchOneNETData() {
     try {
-        const res = await fetch(CLOUD_FUNCTION_URL);
+        console.log("开始请求数据");
+        console.log('请求URL:', CLOUD_FUNCTION_URL);
+        console.log('请求云函数:', CLOUD_FUNCTION_URL);
+
+        const res = await fetch(CLOUD_FUNCTION_URL, {
+            method: 'GET',
+            mode: 'cors',
+            cache: 'no-cache'
+        });
+        console.log('response:', res);
         if (!res.ok) {
             throw new Error(`HTTP ${res.status}`);
         }
 
         const data = await res.json();
+        console.log('data:', data);
+        console.log('返回数据:', data);
 
         dashboardState.deviceOnline = true;
         dashboardState.updatedAt = data.time || new Date().toLocaleString();
@@ -254,6 +266,7 @@ async function fetchOneNETData() {
 
         updateUI(dashboardState);
     } catch (err) {
+        console.error('fetch error:', err);
         console.error('获取数据失败', err);
         showError();
     }
@@ -312,3 +325,6 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchOneNETData();
     setInterval(fetchOneNETData, 5000);
 });
+
+setInterval(fetchOneNETData, 5000);
+fetchOneNETData();
