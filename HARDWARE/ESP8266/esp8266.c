@@ -5,20 +5,20 @@
 #include <stdlib.h>
 
 /*
- * 接收缓冲区
- * 用于保存模块完整返回内容
+ * 鎺ユ敹缂撳啿鍖?
+ * 鐢ㄤ簬淇濆瓨妯″潡瀹屾暣杩斿洖鍐呭
  */
-u8 esp_rx_buffer[ESP8266_RX_BUFFER_SIZE];   // ESP8266接收缓冲区
-u8 esp_rx_flag = 0;                         // 接收完成标志
-u16 esp_rx_len = 0;                         // 接收数据长度
+u8 esp_rx_buffer[ESP8266_RX_BUFFER_SIZE];   // ESP8266鎺ユ敹缂撳啿鍖?
+u8 esp_rx_flag = 0;                         // 鎺ユ敹瀹屾垚鏍囧織
+u16 esp_rx_len = 0;                         // 鎺ユ敹鏁版嵁闀垮害
 
-// 连接状态标志
-u8 wifi_connected = 0;          // WiFi连接状态
-u8 onenet_connected = 0;        // OneNet连接状态
+// 杩炴帴鐘舵€佹爣蹇?
+u8 wifi_connected = 0;          // WiFi杩炴帴鐘舵€?
+u8 onenet_connected = 0;        // OneNet杩炴帴鐘舵€?
 
 /*
- * 简单软件延时
- * 用于AT命令等待期间
+ * 绠€鍗曡蒋浠跺欢鏃?
+ * 鐢ㄤ簬AT鍛戒护绛夊緟鏈熼棿
  */
 void esp_delay_ms(u16 nms)
 {
@@ -31,8 +31,8 @@ void esp_delay_ms(u16 nms)
 }
 
 /*
- * 清空接收缓冲区
- * 发送新命令前调用
+ * 娓呯┖鎺ユ敹缂撳啿鍖?
+ * 鍙戦€佹柊鍛戒护鍓嶈皟鐢?
  */
 void esp_clear_buffer(void)
 {
@@ -44,21 +44,21 @@ void esp_clear_buffer(void)
 }
 
 /**
-  * @brief  串口3发送字符串
-  * @param  str: 待发送字符串
+  * @brief  涓插彛3鍙戦€佸瓧绗︿覆
+  * @param  str: 寰呭彂閫佸瓧绗︿覆
   */
 void USART3_SendString(char *str)
 {
     while(*str)
     {
-        while((USART3->SR & 0X40) == 0);  // 等待发送完成
-        USART3->DR = (u8)(*str++);         // 发送数据
+        while((USART3->SR & 0X40) == 0);  // 绛夊緟鍙戦€佸畬鎴?
+        USART3->DR = (u8)(*str++);         // 鍙戦€佹暟鎹?
     }
 }
 
 /*
- * 等待两个关键字中的任意一个
- * 用于判断AT命令是否成功
+ * 绛夊緟涓や釜鍏抽敭瀛椾腑鐨勪换鎰忎竴涓?
+ * 鐢ㄤ簬鍒ゆ柇AT鍛戒护鏄惁鎴愬姛
  */
 static u8 esp8266_wait_ack(const char *ack1, const char *ack2, u16 timeout)
 {
@@ -86,8 +86,8 @@ static u8 esp8266_wait_ack(const char *ack1, const char *ack2, u16 timeout)
 }
 
 /*
- * 等待三个关键字中的任意一个
- * 用于发布数据后的返回判断
+ * 绛夊緟涓変釜鍏抽敭瀛椾腑鐨勪换鎰忎竴涓?
+ * 鐢ㄤ簬鍙戝竷鏁版嵁鍚庣殑杩斿洖鍒ゆ柇
  */
 static u8 esp8266_wait_ack3(const char *ack1, const char *ack2, const char *ack3, u16 timeout)
 {
@@ -116,8 +116,39 @@ static u8 esp8266_wait_ack3(const char *ack1, const char *ack2, const char *ack3
 }
 
 /*
- * 发送AT命令并等待返回
- * 支持两个成功关键字
+ * 绛夊緟MQTT杩炴帴缁撴灉
+ * 鍚屾椂鍒ゆ柇鎴愬姛鍜屽け璐ユ爣蹇? */
+static u8 esp8266_wait_mqttconn(u16 timeout)
+{
+    u16 elapsed = 0;
+
+    while(elapsed < timeout)
+    {
+        esp_delay_ms(20);
+        elapsed += 20;
+
+        if(strstr((char*)esp_rx_buffer, "+MQTTCONNECTED") != NULL ||
+           strstr((char*)esp_rx_buffer, "+MQTTCONN:0,0,0") != NULL ||
+           strstr((char*)esp_rx_buffer, "\r\nOK\r\n") != NULL)
+        {
+            return 1;
+        }
+
+        if(strstr((char*)esp_rx_buffer, "+MQTTDISCONNECTED") != NULL ||
+           strstr((char*)esp_rx_buffer, "\r\nERROR\r\n") != NULL ||
+           strstr((char*)esp_rx_buffer, "\r\nFAIL\r\n") != NULL)
+        {
+            return 0;
+        }
+    }
+
+    printf("ESP8266 FULL BUFFER: %s\r\n", esp_rx_buffer);
+    return 0;
+}
+
+/*
+ * 鍙戦€丄T鍛戒护骞剁瓑寰呰繑鍥?
+ * 鏀寔涓や釜鎴愬姛鍏抽敭瀛?
  */
 static u8 esp8266_cmd_send_multi(char *cmd, const char *ack1, const char *ack2, u16 timeout)
 {
@@ -139,11 +170,11 @@ static u8 esp8266_cmd_send_multi(char *cmd, const char *ack1, const char *ack2, 
 }
 
 /**
-  * @brief  发送AT命令
-  * @param  cmd: 命令字符串
-  * @param  ack: 成功关键字
-  * @param  timeout: 超时时间
-  * @retval 1成功，0失败
+  * @brief  鍙戦€丄T鍛戒护
+  * @param  cmd: 鍛戒护瀛楃涓?
+  * @param  ack: 鎴愬姛鍏抽敭瀛?
+  * @param  timeout: 瓒呮椂鏃堕棿
+  * @retval 1鎴愬姛锛?澶辫触
   */
 u8 esp8266_cmd_send(char *cmd, char *ack, u16 timeout)
 {
@@ -151,9 +182,9 @@ u8 esp8266_cmd_send(char *cmd, char *ack, u16 timeout)
 }
 
 /**
-  * @brief  检查缓冲区中是否包含关键字
-  * @param  ack: 目标关键字
-  * @retval 1找到，0未找到
+  * @brief  妫€鏌ョ紦鍐插尯涓槸鍚﹀寘鍚叧閿瓧
+  * @param  ack: 鐩爣鍏抽敭瀛?
+  * @retval 1鎵惧埌锛?鏈壘鍒?
   */
 u8 esp8266_check_cmd(char *ack)
 {
@@ -163,8 +194,8 @@ u8 esp8266_check_cmd(char *ack)
 }
 
 /**
-  * @brief  初始化ESP8266模块
-  * @note   完成AT测试、关闭回显、设置模式和查询版本
+  * @brief  鍒濆鍖朎SP8266妯″潡
+  * @note   瀹屾垚AT娴嬭瘯銆佸叧闂洖鏄俱€佽缃ā寮忓拰鏌ヨ鐗堟湰
   */
 void esp8266_init(void)
 {
@@ -188,8 +219,8 @@ void esp8266_init(void)
 }
 
 /**
-  * @brief  连接WiFi
-  * @note   连接成功后会查询当前IP
+  * @brief  杩炴帴WiFi
+  * @note   杩炴帴鎴愬姛鍚庝細鏌ヨ褰撳墠IP
   */
 void esp8266_connect_wifi(void)
 {
@@ -209,36 +240,79 @@ void esp8266_connect_wifi(void)
 }
 
 /**
-  * @brief  连接OneNET平台
-  * @note   以MQTT连接成功作为最终判断
+  * @brief  杩炴帴OneNET骞冲彴
+  * @note   浠QTT杩炴帴鎴愬姛浣滀负鏈€缁堝垽鏂?
   */
 void esp8266_connect_onenet(void)
 {
     char cmd[512];
+    char log_cmd[512];
     u8 mqtt_connected = 0;
+    u8 usercfg_ok = 0;
     
     printf("\r\n========== Connect OneNET start ==========\r\n");
     printf("Server: %s:%s\r\n", ONENET_SERVER, ONENET_PORT);
     printf("Device Name: %s\r\n", DEVICE_NAME);
     
+    printf("MQTT USERCFG start\r\n");
     sprintf(cmd, "AT+MQTTUSERCFG=0,1,\"%s\",\"%s\",\"%s\",0,0,\"\"", 
-            DEVICE_NAME, PRODUCT_ID, DEVICE_TOKEN);
-    esp8266_cmd_send(cmd, "OK", 5000);
+            DEVICE_NAME, PRODUCT_ID, ONENET_MQTT_TOKEN);
+    sprintf(log_cmd, "AT+MQTTUSERCFG=0,1,\"%s\",\"%s\",\"%.4s****%.4s\",0,0,\"\"",
+            DEVICE_NAME, PRODUCT_ID, ONENET_MQTT_TOKEN, ONENET_MQTT_TOKEN + strlen(ONENET_MQTT_TOKEN) - 4);
+    printf("MQTT USERCFG CMD: %s\r\n", log_cmd);
+    esp_clear_buffer();
+    USART3_SendString(cmd);
+    USART3_SendString("\r\n");
+    usercfg_ok = esp8266_wait_ack("OK", NULL, 10000);
+    if(usercfg_ok)
+    {
+        printf("ESP8266 CMD OK: MQTTUSERCFG\r\n");
+        printf("MQTT USERCFG success\r\n");
+    }
+    else
+    {
+        printf("ESP8266 CMD ERROR: MQTTUSERCFG\r\n");
+        printf("MQTT USERCFG fail\r\n");
+    }
     
     esp_delay_ms(500);
+
+    esp8266_cmd_send("AT+CWJAP?", "OK", 3000);
+    esp8266_cmd_send("AT+CIPSTATUS", "OK", 3000);
     
+    printf("MQTT CONN start\r\n");
     sprintf(cmd, "AT+MQTTCONN=0,\"%s\",%s,1", ONENET_SERVER, ONENET_PORT);
-    mqtt_connected = esp8266_cmd_send_multi(cmd, "+MQTTCONNECTED", "OK", 10000);
+    printf("MQTT CONN CMD: %s\r\n", cmd);
+
+    esp_clear_buffer();
+    printf("Send CMD: %s\r\n", cmd);
+    USART3_SendString(cmd);
+    USART3_SendString("\r\n");
+
+    mqtt_connected = esp8266_wait_mqttconn(15000);
     if(mqtt_connected)
+    {
         onenet_connected = 1;
-    
-    printf("Connect OneNET done\r\n");
-    esp8266_subscribe_property_reply();
+        printf("ESP8266 CMD OK: %s\r\n", cmd);
+        printf("MQTT CONN success\r\n");
+        printf("Connect OneNET done\r\n");
+        esp8266_subscribe_property_reply();
+    }
+    else
+    {
+        onenet_connected = 0;
+        printf("ESP8266 CMD ERROR: %s\r\n", cmd);
+        printf("MQTT CONN fail\r\n");
+        printf("MQTT disconnected, stop subscribe and publish\r\n");
+        printf("Connect OneNET ERROR\r\n");
+        esp_delay_ms(2000);
+        return;
+    }
 }
 
 /**
-  * @brief  订阅属性上报回执主题
-  * @note   用于接收OneNET返回的code和msg
+  * @brief  璁㈤槄灞炴€т笂鎶ュ洖鎵т富棰?
+  * @note   鐢ㄤ簬鎺ユ敹OneNET杩斿洖鐨刢ode鍜宮sg
   */
 void esp8266_subscribe_property_reply(void)
 {
@@ -254,17 +328,27 @@ void esp8266_subscribe_property_reply(void)
 }
 
 /**
-  * @brief  发布MQTT原始数据
-  * @param  topic: 发布主题
-  * @param  payload: 发布内容
+  * @brief  鍙戝竷MQTT鍘熷鏁版嵁
+  * @param  topic: 鍙戝竷涓婚
+  * @param  payload: 鍙戝竷鍐呭
   */
 void esp8266_mqtt_publish(const char *topic, const char *payload)
 {
     char cmd[256];
+    u16 payload_len;
 
-    sprintf(cmd, "AT+MQTTPUBRAW=0,\"%s\",%d,0,0", topic, strlen(payload));
+    if(!onenet_connected)
+    {
+        printf("MQTT not connected, skip publish\r\n");
+        return;
+    }
 
-    esp8266_cmd_send(cmd, ">", 3000);
+    payload_len = strlen(payload);
+    sprintf(cmd, "AT+MQTTPUBRAW=0,\"%s\",%d,0,0", topic, payload_len);
+
+    if(!esp8266_cmd_send(cmd, ">", 3000))
+        return;
+
     esp_clear_buffer();
     USART3_SendString((char *)payload);
 
@@ -275,11 +359,11 @@ void esp8266_mqtt_publish(const char *topic, const char *payload)
 }
 
 /**
-  * @brief  上报传感器属性到OneNET
-  * @param  temp: 温度值
-  * @param  hum: 湿度值
-  * @param  smoke: 烟雾值
-  * @param  pm: PM2.5值
+  * @brief  涓婃姤浼犳劅鍣ㄥ睘鎬у埌OneNET
+  * @param  temp: 娓╁害鍊?
+  * @param  hum: 婀垮害鍊?
+  * @param  smoke: 鐑熼浘鍊?
+  * @param  pm: PM2.5鍊?
   */
 void esp8266_onenet_post_property(float temp, float hum, float smoke, float pm)
 {
@@ -303,9 +387,9 @@ void esp8266_onenet_post_property(float temp, float hum, float smoke, float pm)
 }
 
 /**
-  * @brief  发送旧版数据到OneNET
-  * @param  data: 数据内容
-  * @param  len: 数据长度
+  * @brief  鍙戦€佹棫鐗堟暟鎹埌OneNET
+  * @param  data: 鏁版嵁鍐呭
+  * @param  len: 鏁版嵁闀垮害
   */
 void esp8266_send_data(char *data, u16 len)
 {
@@ -313,27 +397,27 @@ void esp8266_send_data(char *data, u16 len)
     
     if(!onenet_connected)
     {
-        printf("OneNet未连接，请先连接!\r\n");
+        printf("OneNet鏈繛鎺ワ紝璇峰厛杩炴帴!\r\n");
         return;
     }
     
-    // 发送MQTT数据
+    // 鍙戦€丮QTT鏁版嵁
     sprintf(cmd, "AT+MQTTPUB=0,\"$dp\",\"%s\",0,0", data);
     esp8266_cmd_send(cmd, "OK", 3000);
     
-    printf("数据发送成功: %s\r\n", data);
+    printf("鏁版嵁鍙戦€佹垚鍔? %s\r\n", data);
 }
 
 /**
-  * @brief  发送单个传感器数据
-  * @param  datastream: 数据流名称
-  * @param  value: 数据值
+  * @brief  鍙戦€佸崟涓紶鎰熷櫒鏁版嵁
+  * @param  datastream: 鏁版嵁娴佸悕绉?
+  * @param  value: 鏁版嵁鍊?
   */
 void esp8266_send_sensor_data(char *datastream, float value)
 {
     char data[100];
     
-    // OneNet数据格式
+    // OneNet鏁版嵁鏍煎紡
     // {"datastreams":[{"id":"temperature","datapoints":[{"value":25.5}]}]}
     sprintf(data, "{\"datastreams\":[{\"id\":\"%s\",\"datapoints\":[{\"value\":%.2f}]}]}", 
             datastream, value);
@@ -342,8 +426,8 @@ void esp8266_send_sensor_data(char *datastream, float value)
 }
 
 /**
-  * @brief  发送多个数据点
-  * @param  pm: PM数据
+  * @brief  鍙戦€佸涓暟鎹偣
+  * @param  pm: PM鏁版嵁
   */
 void esp8266_send_multi_data(float pm)
 {
@@ -355,8 +439,8 @@ void esp8266_send_multi_data(float pm)
 }
 
 /**
-  * @brief  处理串口3接收到的字节
-  * @param  res: 当前接收到的字节
+  * @brief  澶勭悊涓插彛3鎺ユ敹鍒扮殑瀛楄妭
+  * @param  res: 褰撳墠鎺ユ敹鍒扮殑瀛楄妭
   */
 void esp8266_data_handle(u8 res)
 {

@@ -22,7 +22,7 @@ Dialog DLL:      TCM.DLL V1.14.4.0
  
 <h2>Project:</h2>
 D:\Template\USER\Template.uvprojx
-Project File Date:  04/24/2026
+Project File Date:  05/05/2026
 
 <h2>Output:</h2>
 Build target 'Template'
@@ -30,10 +30,19 @@ compiling main.c...
 ..\HARDWARE\ATOMIZER\atomizer.h(25): warning:  #1-D: last line of file ends without a newline
   #endif
 main.c: 1 warning, 0 errors
+compiling usart3.c...
+compiling esp8266.c...
+..\HARDWARE\ESP8266\esp8266.c(327): warning:  #223-D: function "delay_ms" declared implicitly
+      delay_ms(1000);
+..\HARDWARE\ESP8266\esp8266.c(385): warning:  #223-D: function "delay_ms" declared implicitly
+      delay_ms(5000);
+..\HARDWARE\ESP8266\esp8266.c(408): warning:  #870-D: invalid multibyte character sequence
+      printf("鏁版嵁鍙戦€佹垚�? %s\r\n", data);
+..\HARDWARE\ESP8266\esp8266.c: 3 warnings, 0 errors
 linking...
-Program Size: Code=38104 RO-data=7320 RW-data=44 ZI-data=3916  
+Program Size: Code=39024 RO-data=7332 RW-data=44 ZI-data=3916  
 FromELF: creating hex file...
-"..\OBJ\Template.axf" - 0 Error(s), 1 Warning(s).
+"..\OBJ\Template.axf" - 0 Error(s), 4 Warning(s).
 
 <h2>Collection of Component include folders:</h2>
   D:\Template\USER\RTE
