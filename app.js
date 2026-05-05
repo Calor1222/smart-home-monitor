@@ -1,7 +1,12 @@
+﻿const CLOUD_FUNCTION_URL = "https://1347976579-cky20hoj3r.ap-guangzhou.tencentscf.com";
+const CLOUD_CONTROL_URL = `${CLOUD_FUNCTION_URL}/control`;
+console.log("app.js 宸插姞杞?);
+
 const TEXT = {
     online: "\u5728\u7ebf",
     offline: "\u79bb\u7ebf",
     noData: "--",
+    loadFailed: "\u6570\u636e\u83b7\u53d6\u5931\u8d25",
     pmLevelPrefix: "\u7a7a\u6c14\u8d28\u91cf\u7b49\u7ea7\uff1a",
     good: "\u4f18",
     fair: "\u826f",
@@ -9,7 +14,7 @@ const TEXT = {
     danger: "\u91cd\u5ea6\u6c61\u67d3"
 };
 
-const mockData = {
+const initialData = {
     deviceOnline: null,
     updatedAt: null,
     current: {
@@ -19,6 +24,13 @@ const mockData = {
         pm: null
     },
     history: []
+};
+
+const dashboardState = {
+    deviceOnline: initialData.deviceOnline,
+    updatedAt: initialData.updatedAt,
+    current: { ...initialData.current },
+    history: [...initialData.history]
 };
 
 const controlState = {
@@ -59,6 +71,19 @@ function formatTime(timeString) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}:${String(date.getSeconds()).padStart(2, "0")}`;
 }
 
+function formatChartTime(timeString) {
+    if (!timeString) {
+        return TEXT.noData;
+    }
+
+    const date = new Date(timeString);
+    if (Number.isNaN(date.getTime())) {
+        return timeString;
+    }
+
+    return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}:${String(date.getSeconds()).padStart(2, "0")}`;
+}
+
 function formatValue(value, suffix) {
     if (value == null) {
         return TEXT.noData;
@@ -97,7 +122,7 @@ function createChartData(history) {
     const limitedHistory = normalizeHistory(history);
 
     return {
-        labels: limitedHistory.map(item => item.time || TEXT.noData),
+        labels: limitedHistory.map(item => formatChartTime(item.time)),
         datasets: [
             {
                 label: "Temp",
@@ -183,20 +208,101 @@ function updateChart(history) {
     trendChart.update("none");
 }
 
-function renderDashboard(data) {
+function updateUI(data) {
     updateStatusBar(data);
     updateCards(data);
     updateChart(data.history);
 }
 
-async function fetchOneNETData() {
-    // 这里预留后续接入 OneNET HTTP API 的逻辑
-    // 前端不要写死 Token，建议后续通过后端接口转发请求
-    return mockData;
+function appendHistoryPoint(data) {
+    dashboardState.history.push({
+        time: data.time || new Date().toLocaleString(),
+        Temp: data.Temp ?? null,
+        Hum: data.Hum ?? null,
+        Smoke: data.Smoke ?? null,
+        pm: data.pm ?? null
+    });
+
+    if (dashboardState.history.length > MAX_HISTORY_POINTS) {
+        dashboardState.history.splice(0, dashboardState.history.length - MAX_HISTORY_POINTS);
+    }
 }
 
-function sendControlCommand(device, state) {
-    console.log("sendControlCommand", device, state);
+async function fetchOneNETData() {
+    try {
+        console.log("寮€濮嬭姹傛暟鎹?);
+        console.log('璇锋眰URL:', CLOUD_FUNCTION_URL);
+        console.log('璇锋眰浜戝嚱鏁?', CLOUD_FUNCTION_URL);
+
+        const res = await fetch(CLOUD_FUNCTION_URL, {
+            method: 'GET',
+            mode: 'cors',
+            cache: 'no-cache'
+        });
+        console.log('response:', res);
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        console.log('data:', data);
+        console.log('杩斿洖鏁版嵁:', data);
+
+        dashboardState.deviceOnline = true;
+        dashboardState.updatedAt = data.time || new Date().toLocaleString();
+        dashboardState.current = {
+            Temp: Number(data.Temp),
+            Hum: Number(data.Hum),
+            Smoke: Number(data.Smoke),
+            pm: Number(data.pm)
+        };
+
+        appendHistoryPoint({
+            Temp: dashboardState.current.Temp,
+            Hum: dashboardState.current.Hum,
+            Smoke: dashboardState.current.Smoke,
+            pm: dashboardState.current.pm,
+            time: dashboardState.updatedAt
+        });
+
+        updateUI(dashboardState);
+    } catch (err) {
+        console.error('fetch error:', err);
+        console.error('鑾峰彇鏁版嵁澶辫触', err);
+        showError();
+    }
+}
+
+function showError() {
+    const deviceStatus = document.getElementById("deviceStatus");
+    const updateTime = document.getElementById("updateTime");
+    const pmLevel = document.getElementById("pmLevel");
+
+    deviceStatus.textContent = TEXT.loadFailed;
+    updateTime.textContent = TEXT.noData;
+    pmLevel.textContent = TEXT.loadFailed;
+}
+
+async function sendControlCommand(params) {
+    try {
+        // 璋冪敤浜戝嚱鏁?control 鎺ュ彛
+        console.log("POST control url:", CLOUD_CONTROL_URL);
+        console.log("POST control body:", params);
+        const res = await fetch(CLOUD_CONTROL_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(params)
+        });
+
+        const data = await res.json();
+        console.log("control result:", data);
+        return data;
+    } catch (err) {
+        console.error("control error:", err);
+        throw err;
+    }
 }
 
 function getControlLabel(device, state) {
@@ -219,8 +325,15 @@ function updateControlButton(device) {
 
 function handleControlToggle(device) {
     controlState[device] = !controlState[device];
+    console.log("click control:", device, controlState[device]);
     updateControlButton(device);
-    sendControlCommand(device, controlState[device]);
+    if (device === "atomizer") {
+        sendControlCommand({ AtomizerSwitch: controlState[device] });
+    } else if (device === "fan") {
+        sendControlCommand({ FanSwitch: controlState[device] });
+    } else {
+        sendControlCommand({ MotorSwitch: controlState[device] });
+    }
 }
 
 function initControls() {
@@ -232,17 +345,13 @@ function initControls() {
     });
 }
 
-async function refreshData() {
-    try {
-        const data = await fetchOneNETData();
-        renderDashboard(data);
-    } catch (error) {
-        console.error("Load dashboard data failed:", error);
-    }
-}
-
 document.addEventListener("DOMContentLoaded", () => {
     initControls();
-    renderDashboard(mockData);
-    setInterval(refreshData, 5000);
+    updateUI(initialData);
+    fetchOneNETData();
+    setInterval(fetchOneNETData, 5000);
 });
+
+setInterval(fetchOneNETData, 5000);
+fetchOneNETData();
+
