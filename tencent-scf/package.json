@@ -1,0 +1,10 @@
+{
+  "name": "onenet-proxy-scf",
+  "version": "1.0.0",
+  "description": "Tencent SCF proxy for latest OneNET device properties",
+  "main": "src/index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "node ./src/index.js"
+  }
+}

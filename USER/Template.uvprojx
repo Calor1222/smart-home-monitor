@@ -365,7 +365,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CORE;..\USER;..\FWLIB\inc;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\HARDWARE\DHT11;..\HARDWARE\LCD;..\HARDWARE\LED;..\HARDWARE\STEPMOTOR;..\HARDWARE\ESP8266;..\SYSTEM\usart3;..\HARDWARE\MQ2;..\HARDWARE\FAN;..\HARDWARE\GP2Y</IncludePath>
+              <IncludePath>..\CORE;..\USER;..\FWLIB\inc;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\HARDWARE\DHT11;..\HARDWARE\LCD;..\HARDWARE\LED;..\HARDWARE\STEPMOTOR;..\HARDWARE\ESP8266;..\SYSTEM\usart3;..\HARDWARE\MQ2;..\HARDWARE\FAN;..\HARDWARE\GP2Y;..\HARDWARE\ATOMIZER</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -682,6 +682,11 @@
               <FileName>gp2y.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\GP2Y\gp2y.c</FilePath>
+            </File>
+            <File>
+              <FileName>atomizer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\ATOMIZER\atomizer.c</FilePath>
             </File>
           </Files>
         </Group>
