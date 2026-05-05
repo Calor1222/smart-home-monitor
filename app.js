@@ -1,6 +1,6 @@
 ﻿const CLOUD_FUNCTION_URL = "https://1347976579-cky20hoj3r.ap-guangzhou.tencentscf.com";
 const CLOUD_CONTROL_URL = `${CLOUD_FUNCTION_URL}/control`;
-console.log("app.js 宸插姞杞?);
+console.log("app.js 已加载");
 
 const TEXT = {
     online: "\u5728\u7ebf",
