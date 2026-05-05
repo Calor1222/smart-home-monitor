@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>&#26234;&#33021;&#23478;&#23621;&#29615;&#22659;&#30417;&#27979;&#31995;&#32479;</title>
+    <link rel="stylesheet" href="./style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="page-shell">
+        <header class="page-header">
+            <h1>&#26234;&#33021;&#23478;&#23621;&#29615;&#22659;&#30417;&#27979;&#31995;&#32479;</h1>
+            <div class="status-box">
+                <div class="status-line">
+                    <span>&#35774;&#22791;&#29366;&#24577;</span>
+                    <span id="deviceStatus">--</span>
+                </div>
+                <div class="status-line">
+                    <span>&#25968;&#25454;&#26356;&#26032;&#26102;&#38388;</span>
+                    <span id="updateTime">--</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="page-main">
+            <section class="cards-grid">
+                <article class="data-card">
+                    <div class="card-title">Temp</div>
+                    <div id="tempValue" class="card-value">--</div>
+                    <div class="card-note">&#28201;&#24230;</div>
+                </article>
+                <article class="data-card">
+                    <div class="card-title">Hum</div>
+                    <div id="humValue" class="card-value">--</div>
+                    <div class="card-note">&#28287;&#24230;</div>
+                </article>
+                <article class="data-card">
+                    <div class="card-title">Smoke</div>
+                    <div id="smokeValue" class="card-value">--</div>
+                    <div class="card-note">&#28895;&#38654;&#27987;&#24230;</div>
+                </article>
+                <article class="data-card">
+                    <div class="card-title">pm</div>
+                    <div id="pmValue" class="card-value">--</div>
+                    <div id="pmLevel" class="card-note">--</div>
+                </article>
+            </section>
+
+            <section class="section-box">
+                <h2>&#25968;&#25454;&#36235;&#21183;</h2>
+                <div class="chart-wrap">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </section>
+
+            <section class="section-box">
+                <h2>&#35774;&#22791;&#36828;&#31243;&#25511;&#21046;</h2>
+                <div class="control-grid">
+                    <button id="fanControl" class="control-button" type="button">&#39118;&#25159;&#65306;&#20851;</button>
+                    <button id="atomizerControl" class="control-button" type="button">&#38654;&#21270;&#22120;&#65306;&#20851;</button>
+                    <button id="motorControl" class="control-button" type="button">&#30005;&#26426;&#65306;&#20851;</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="./app.js"></script>
+</body>
+</html>
