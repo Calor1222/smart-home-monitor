@@ -130,7 +130,7 @@ function createChartData(history) {
                 data: limitedHistory.map(item => item.Temp),
                 borderColor: "#ff0000",
                 backgroundColor: "rgba(255, 0, 0, 0.15)",
-                borderWidth: 3,
+                borderWidth: 9,
                 pointRadius: 3,
                 pointHoverRadius: 5,
                 tension: 0.3
@@ -140,7 +140,7 @@ function createChartData(history) {
                 data: limitedHistory.map(item => item.Hum),
                 borderColor: "#0000ff",
                 backgroundColor: "rgba(0, 0, 255, 0.15)",
-                borderWidth: 3,
+                borderWidth: 9,
                 pointRadius: 3,
                 pointHoverRadius: 5,
                 tension: 0.3
@@ -150,7 +150,7 @@ function createChartData(history) {
                 data: limitedHistory.map(item => item.Smoke),
                 borderColor: "#ffd700",
                 backgroundColor: "rgba(255, 215, 0, 0.15)",
-                borderWidth: 3,
+                borderWidth: 9,
                 pointRadius: 3,
                 pointHoverRadius: 5,
                 tension: 0.3
@@ -160,7 +160,7 @@ function createChartData(history) {
                 data: limitedHistory.map(item => item.pm),
                 borderColor: "#00aa00",
                 backgroundColor: "rgba(0, 170, 0, 0.15)",
-                borderWidth: 3,
+                borderWidth: 9,
                 pointRadius: 3,
                 pointHoverRadius: 5,
                 tension: 0.3
