@@ -1,5 +1,6 @@
 const CLOUD_FUNCTION_URL = "https://1347976579-cky20hoj3r.ap-guangzhou.tencentscf.com";
-console.log("app.js 已加载");
+const CLOUD_CONTROL_URL = CLOUD_FUNCTION_URL + "/control";
+console.log("app.js loaded");
 
 const TEXT = {
     online: "\u5728\u7ebf",
@@ -40,6 +41,7 @@ const controlState = {
 
 const MAX_HISTORY_POINTS = 20;
 let trendChart;
+let globalMode = "auto";
 
 function getPmLevel(pm) {
     if (pm == null) {
@@ -84,7 +86,7 @@ function formatChartTime(timeString) {
 }
 
 function formatValue(value, suffix) {
-    if (value == null) {
+    if (value == null || Number.isNaN(value)) {
         return TEXT.noData;
     }
     return `${value.toFixed(1)} ${suffix}`;
@@ -126,34 +128,42 @@ function createChartData(history) {
             {
                 label: "Temp",
                 data: limitedHistory.map(item => item.Temp),
-                borderColor: "#555555",
-                borderWidth: 1,
-                pointRadius: 2,
-                tension: 0
+                borderColor: "#ff0000",
+                backgroundColor: "rgba(255, 0, 0, 0.15)",
+                borderWidth: 9,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                tension: 0.3
             },
             {
                 label: "Hum",
                 data: limitedHistory.map(item => item.Hum),
-                borderColor: "#777777",
-                borderWidth: 1,
-                pointRadius: 2,
-                tension: 0
+                borderColor: "#0000ff",
+                backgroundColor: "rgba(0, 0, 255, 0.15)",
+                borderWidth: 9,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                tension: 0.3
             },
             {
                 label: "Smoke",
                 data: limitedHistory.map(item => item.Smoke),
-                borderColor: "#999999",
-                borderWidth: 1,
-                pointRadius: 2,
-                tension: 0
+                borderColor: "#ffd700",
+                backgroundColor: "rgba(255, 215, 0, 0.15)",
+                borderWidth: 9,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                tension: 0.3
             },
             {
                 label: "pm",
                 data: limitedHistory.map(item => item.pm),
-                borderColor: "#222222",
-                borderWidth: 1,
-                pointRadius: 2,
-                tension: 0
+                borderColor: "#00aa00",
+                backgroundColor: "rgba(0, 170, 0, 0.15)",
+                borderWidth: 9,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                tension: 0.3
             }
         ]
     };
@@ -229,23 +239,17 @@ function appendHistoryPoint(data) {
 
 async function fetchOneNETData() {
     try {
-        console.log("开始请求数据");
-        console.log('请求URL:', CLOUD_FUNCTION_URL);
-        console.log('请求云函数:', CLOUD_FUNCTION_URL);
-
         const res = await fetch(CLOUD_FUNCTION_URL, {
-            method: 'GET',
-            mode: 'cors',
-            cache: 'no-cache'
+            method: "GET",
+            mode: "cors",
+            cache: "no-cache"
         });
-        console.log('response:', res);
+
         if (!res.ok) {
             throw new Error(`HTTP ${res.status}`);
         }
 
         const data = await res.json();
-        console.log('data:', data);
-        console.log('返回数据:', data);
 
         dashboardState.deviceOnline = true;
         dashboardState.updatedAt = data.time || new Date().toLocaleString();
@@ -266,8 +270,7 @@ async function fetchOneNETData() {
 
         updateUI(dashboardState);
     } catch (err) {
-        console.error('fetch error:', err);
-        console.error('获取数据失败', err);
+        console.error("fetch error:", err);
         showError();
     }
 }
@@ -282,8 +285,23 @@ function showError() {
     pmLevel.textContent = TEXT.loadFailed;
 }
 
-function sendControlCommand(device, state) {
-    console.log("sendControlCommand", device, state);
+async function sendControlCommand(params) {
+    try {
+        const res = await fetch(CLOUD_CONTROL_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(params)
+        });
+
+        const data = await res.json();
+        console.log("control result:", data);
+        return data;
+    } catch (err) {
+        console.error("control error:", err);
+        throw err;
+    }
 }
 
 function getControlLabel(device, state) {
@@ -304,13 +322,58 @@ function updateControlButton(device) {
     button.classList.toggle("active", state);
 }
 
+function getGlobalModeLabel() {
+    return globalMode === "manual" ? "\u624b\u52a8\u6a21\u5f0f" : "\u81ea\u52a8\u6a21\u5f0f";
+}
+
+function updateGlobalModeButton() {
+    const button = document.getElementById("globalModeToggle");
+
+    button.textContent = getGlobalModeLabel();
+    button.classList.toggle("active", globalMode === "manual");
+}
+
+async function setGlobalMode(mode) {
+    globalMode = mode;
+    updateGlobalModeButton();
+    await sendControlCommand({
+        FanMode: mode,
+        AtomizerMode: mode,
+        MotorMode: mode
+    });
+}
+
 function handleControlToggle(device) {
     controlState[device] = !controlState[device];
+    globalMode = "manual";
+    updateGlobalModeButton();
     updateControlButton(device);
-    sendControlCommand(device, controlState[device]);
+
+    if (device === "fan") {
+        sendControlCommand({
+            FanMode: "manual",
+            FanSwitch: controlState[device]
+        });
+    } else if (device === "atomizer") {
+        sendControlCommand({
+            AtomizerMode: "manual",
+            AtomizerSwitch: controlState[device]
+        });
+    } else {
+        sendControlCommand({
+            MotorMode: "manual",
+            MotorSwitch: controlState[device]
+        });
+    }
 }
 
 function initControls() {
+    updateGlobalModeButton();
+
+    document.getElementById("globalModeToggle").addEventListener("click", () => {
+        setGlobalMode(globalMode === "auto" ? "manual" : "auto");
+    });
+
     ["fan", "atomizer", "motor"].forEach(device => {
         updateControlButton(device);
         document.getElementById(`${device}Control`).addEventListener("click", () => {
@@ -325,6 +388,3 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchOneNETData();
     setInterval(fetchOneNETData, 5000);
 });
-
-setInterval(fetchOneNETData, 5000);
-fetchOneNETData();
