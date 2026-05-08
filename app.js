@@ -1,6 +1,5 @@
-﻿const CLOUD_FUNCTION_URL = "https://1347976579-cky20hoj3r.ap-guangzhou.tencentscf.com";
-const CLOUD_CONTROL_URL = CLOUD_FUNCTION_URL + "/control";
-console.log("app.js loaded");
+const CLOUD_FUNCTION_URL = "https://1347976579-cky20hoj3r.ap-guangzhou.tencentscf.com";
+console.log("app.js 已加载");
 
 const TEXT = {
     online: "\u5728\u7ebf",
@@ -38,7 +37,6 @@ const controlState = {
     atomizer: false,
     motor: false
 };
-let globalMode = "auto";
 
 const MAX_HISTORY_POINTS = 20;
 let trendChart;
@@ -128,42 +126,34 @@ function createChartData(history) {
             {
                 label: "Temp",
                 data: limitedHistory.map(item => item.Temp),
-                borderColor: "#ff0000",
-                backgroundColor: "rgba(255, 0, 0, 0.15)",
-                borderWidth: 9,
-                pointRadius: 3,
-                pointHoverRadius: 5,
-                tension: 0.3
+                borderColor: "#555555",
+                borderWidth: 1,
+                pointRadius: 2,
+                tension: 0
             },
             {
                 label: "Hum",
                 data: limitedHistory.map(item => item.Hum),
-                borderColor: "#0000ff",
-                backgroundColor: "rgba(0, 0, 255, 0.15)",
-                borderWidth: 9,
-                pointRadius: 3,
-                pointHoverRadius: 5,
-                tension: 0.3
+                borderColor: "#777777",
+                borderWidth: 1,
+                pointRadius: 2,
+                tension: 0
             },
             {
                 label: "Smoke",
                 data: limitedHistory.map(item => item.Smoke),
-                borderColor: "#ffd700",
-                backgroundColor: "rgba(255, 215, 0, 0.15)",
-                borderWidth: 9,
-                pointRadius: 3,
-                pointHoverRadius: 5,
-                tension: 0.3
+                borderColor: "#999999",
+                borderWidth: 1,
+                pointRadius: 2,
+                tension: 0
             },
             {
                 label: "pm",
                 data: limitedHistory.map(item => item.pm),
-                borderColor: "#00aa00",
-                backgroundColor: "rgba(0, 170, 0, 0.15)",
-                borderWidth: 9,
-                pointRadius: 3,
-                pointHoverRadius: 5,
-                tension: 0.3
+                borderColor: "#222222",
+                borderWidth: 1,
+                pointRadius: 2,
+                tension: 0
             }
         ]
     };
@@ -240,8 +230,8 @@ function appendHistoryPoint(data) {
 async function fetchOneNETData() {
     try {
         console.log("开始请求数据");
-        console.log('璇锋眰URL:', CLOUD_FUNCTION_URL);
-        console.log('璇锋眰浜戝嚱鏁?', CLOUD_FUNCTION_URL);
+        console.log('请求URL:', CLOUD_FUNCTION_URL);
+        console.log('请求云函数:', CLOUD_FUNCTION_URL);
 
         const res = await fetch(CLOUD_FUNCTION_URL, {
             method: 'GET',
@@ -255,7 +245,7 @@ async function fetchOneNETData() {
 
         const data = await res.json();
         console.log('data:', data);
-        console.log('杩斿洖鏁版嵁:', data);
+        console.log('返回数据:', data);
 
         dashboardState.deviceOnline = true;
         dashboardState.updatedAt = data.time || new Date().toLocaleString();
@@ -277,7 +267,7 @@ async function fetchOneNETData() {
         updateUI(dashboardState);
     } catch (err) {
         console.error('fetch error:', err);
-        console.error('鑾峰彇鏁版嵁澶辫触', err);
+        console.error('获取数据失败', err);
         showError();
     }
 }
@@ -292,26 +282,8 @@ function showError() {
     pmLevel.textContent = TEXT.loadFailed;
 }
 
-async function sendControlCommand(params) {
-    try {
-        // 璋冪敤浜戝嚱鏁?control 鎺ュ彛
-        console.log("POST control url:", CLOUD_CONTROL_URL);
-        console.log("POST control body:", params);
-        const res = await fetch(CLOUD_CONTROL_URL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(params)
-        });
-
-        const data = await res.json();
-        console.log("control result:", data);
-        return data;
-    } catch (err) {
-        console.error("control error:", err);
-        throw err;
-    }
+function sendControlCommand(device, state) {
+    console.log("sendControlCommand", device, state);
 }
 
 function getControlLabel(device, state) {
@@ -332,49 +304,10 @@ function updateControlButton(device) {
     button.classList.toggle("active", state);
 }
 
-function getGlobalModeLabel() {
-    return globalMode === "manual" ? "\u624b\u52a8\u6a21\u5f0f" : "\u81ea\u52a8\u6a21\u5f0f";
-}
-
-function updateGlobalModeButton() {
-    const button = document.getElementById("globalModeToggle");
-
-    button.textContent = getGlobalModeLabel();
-    button.classList.toggle("active", globalMode === "manual");
-}
-
-async function setGlobalMode(mode) {
-    globalMode = mode;
-    updateGlobalModeButton();
-    await sendControlCommand({
-        FanMode: mode,
-        AtomizerMode: mode,
-        MotorMode: mode
-    });
-}
-
 function handleControlToggle(device) {
     controlState[device] = !controlState[device];
-    globalMode = "manual";
-    console.log("click control:", device, controlState[device]);
-    updateGlobalModeButton();
     updateControlButton(device);
-    if (device === "atomizer") {
-        sendControlCommand({
-            AtomizerMode: "manual",
-            AtomizerSwitch: controlState[device]
-        });
-    } else if (device === "fan") {
-        sendControlCommand({
-            FanMode: "manual",
-            FanSwitch: controlState[device]
-        });
-    } else {
-        sendControlCommand({
-            MotorMode: "manual",
-            MotorSwitch: controlState[device]
-        });
-    }
+    sendControlCommand(device, controlState[device]);
 }
 
 function initControls() {
@@ -383,10 +316,6 @@ function initControls() {
         document.getElementById(`${device}Control`).addEventListener("click", () => {
             handleControlToggle(device);
         });
-    });
-    updateGlobalModeButton();
-    document.getElementById("globalModeToggle").addEventListener("click", () => {
-        setGlobalMode(globalMode === "auto" ? "manual" : "auto");
     });
 }
 
@@ -397,3 +326,5 @@ document.addEventListener("DOMContentLoaded", () => {
     setInterval(fetchOneNETData, 5000);
 });
 
+setInterval(fetchOneNETData, 5000);
+fetchOneNETData();
